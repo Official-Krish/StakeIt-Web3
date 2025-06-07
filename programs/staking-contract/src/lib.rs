@@ -58,22 +58,24 @@ pub mod staking_contract {
 
         update_points(pda_account, current_timestamp)?;
 
-        let user_key = ctx.accounts.user.key(); 
-        let seeds = &[
-            b"pda_account",
-            user_key.as_ref(),
-            &[pda_account.bump],
-        ];
-        let signer = &[&seeds[..]];
-        let cpi_context = CpiContext::new_with_signer(
-            ctx.accounts.system_program.to_account_info(),
-            system_program::Transfer {
-                from: pda_account.to_account_info(),
-                to: ctx.accounts.user.to_account_info(),
-            },
-            signer,
-        );
-        system_program::transfer(cpi_context, amount)?;
+        // let user_key = ctx.accounts.user.key(); 
+        // let seeds = &[
+        //     b"pda_account",
+        //     user_key.as_ref(),
+        //     &[pda_account.bump],
+        // ];
+        // let signer = &[&seeds[..]];
+        // let cpi_context = CpiContext::new_with_signer(
+        //     ctx.accounts.system_program.to_account_info(),
+        //     system_program::Transfer {
+        //         from: pda_account.to_account_info(),
+        //         to: ctx.accounts.user.to_account_info(),
+        //     },
+        //     signer,
+        // );
+
+        **pda_account.to_account_info().try_borrow_mut_lamports()? -= amount;
+        **ctx.accounts.user.to_account_info().try_borrow_mut_lamports()? += amount;
 
         pda_account.staked_amount = pda_account.staked_amount.checked_sub(amount)
             .ok_or(StakeError::Underflow)?;
