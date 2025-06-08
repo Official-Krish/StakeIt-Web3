@@ -227,11 +227,9 @@ pub struct CreatePdaAccount<'info> {
     pub pda_account: Account<'info, StakeAccount>,
 
     #[account(
-        init,
-        payer = payer,
+        mut,
         seeds = [b"vault", payer.key().as_ref()],
-        bump,
-        space = 8,
+        bump
     )]
     pub vault: SystemAccount<'info>,
     
