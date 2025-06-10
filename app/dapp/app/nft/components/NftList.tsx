@@ -1,7 +1,8 @@
 "use client"
 import { AnimatePresence, motion } from "framer-motion";
-import { Coins, Crown, Gem, Sparkles, Star, Image } from "lucide-react";
+import { Coins, Crown, Gem, Sparkles, Star, Image as ImageIcon } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 
 export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts: any[], searchTerm: string, selectedCategory: string, viewMode: string } ) => {
     const [mintedNFTs, setMintedNFTs] = useState<string[]>([]);
@@ -72,7 +73,7 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                         >
                             {/* NFT Image */}
                             <div className={`relative ${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : ''}`}>
-                                <img
+                                <Image
                                     src={nft.image}
                                     alt={nft.name}
                                     className={`object-cover ${
@@ -80,6 +81,8 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                                         ? 'w-full h-full rounded-2xl' 
                                         : 'w-full h-64'
                                     }`}
+                                    width={viewMode === 'list' ? 128 : 256}
+                                    height={viewMode === 'list' ? 128 : 256}
                                 />
                                 <div className={`absolute top-3 right-3 px-3 py-1 rounded-xl bg-gradient-to-r ${getRarityColor(nft.rarity)} flex items-center space-x-1`}>
                                     <RarityIcon className="w-4 h-4 text-white" />
@@ -133,7 +136,7 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                                             : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                         }`}
                                     >
-                                        <Image className="w-5 h-5"/>
+                                        <ImageIcon className="w-5 h-5"/>
                                         <span>
                                             {isMinted ? 'Owned' : canAfford ? 'Mint NFT' : 'Insufficient Points'}
                                         </span>
@@ -174,7 +177,7 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                         animate={{ opacity: 1 }}
                         className="text-center py-20"
                     >
-                        <Image className="w-20 h-20 text-gray-600 mx-auto mb-6" />
+                        <ImageIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
                         <h3 className="text-3xl font-bold text-gray-400 mb-4">
                         No NFTs Found
                         </h3>

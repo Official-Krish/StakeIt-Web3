@@ -1,6 +1,7 @@
 "use client"
 import { motion } from "framer-motion";
 import { Coins } from "lucide-react";
+import Image from "next/image";
 
 export default function Hero() {
 
@@ -14,10 +15,12 @@ export default function Hero() {
         <div className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 to-pink-900/20" />
                 <div className="absolute inset-0 opacity-10">
-                <img
+                <Image
                     src="https://images.pexels.com/photos/7567443/pexels-photo-7567443.jpeg?auto=compress&cs=tinysrgb&w=1600"
                     alt="Background"
                     className="w-full h-full object-cover"
+                    width={1920}
+                    height={1080}
                 />
             </div>
             

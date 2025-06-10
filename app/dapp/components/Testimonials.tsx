@@ -1,5 +1,6 @@
 "use client"
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 export function Testimonials () {
     const testimonials = [
@@ -50,10 +51,12 @@ export function Testimonials () {
                                 className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-sm"
                             >
                                 <div className="flex items-center space-x-4 mb-6">
-                                    <img
+                                    <Image
                                         src={testimonial.image}
                                         alt={testimonial.name}
                                         className="w-16 h-16 rounded-full object-cover"
+                                        height={64}
+                                        width={64}
                                     />
                                     <div>
                                         <div className="font-semibold text-white">{testimonial.name}</div>

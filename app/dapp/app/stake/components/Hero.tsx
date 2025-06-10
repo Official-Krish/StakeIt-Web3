@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { Wallet, Coins, TrendingUp, BarChart3 } from 'lucide-react';
 import AnimatedCounter from "./AnimatedCounter";
+import Image from "next/image";
 
 export function Hero () {
     const user = {
@@ -15,10 +16,12 @@ export function Hero () {
         <div className="mt-10">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-cyan-900/20" />
                 <div className="absolute inset-0 opacity-5">
-                    <img
+                    <Image
                         src="https://images.pexels.com/photos/730547/pexels-photo-730547.jpeg?auto=compress&cs=tinysrgb&w=1600"
                         alt="Background"
                         className="w-full h-full object-cover"
+                        height={600}
+                        width={1600}
                     />
                 </div>
             

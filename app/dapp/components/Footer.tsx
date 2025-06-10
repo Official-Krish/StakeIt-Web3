@@ -15,6 +15,7 @@ import {
 import { FaDiscord } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Footer() {
     const scrollToTop = () => {
@@ -68,10 +69,12 @@ export default function Footer() {
             <div className="absolute inset-0">
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-900/50 to-black" />
                     <div className="absolute inset-0 opacity-5">
-                        <img
+                        <Image
                             src="https://images.pexels.com/photos/1181263/pexels-photo-1181263.jpeg?auto=compress&cs=tinysrgb&w=1600"
                             alt="Background"
                             className="w-full h-full object-cover"
+                            height={600}
+                            width={1600}
                         />
                     </div>
                 

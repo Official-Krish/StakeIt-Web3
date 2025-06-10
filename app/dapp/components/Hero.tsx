@@ -1,9 +1,13 @@
 "use client"
+import { useWallet } from '@solana/wallet-adapter-react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Zap, Play, ChevronDown } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 export function Hero () {
+    const router = useRouter();
+    const { connected } = useWallet();
     return (
         <div>
             <section className="relative min-h-screen flex items-center justify-center">
@@ -84,22 +88,37 @@ export function Hero () {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                            <Link href="/stake">
-                                <motion.button
-                                    whileHover={{ 
-                                        scale: 1.05,
-                                        boxShadow: '0 25px 50px rgba(59, 130, 246, 0.4)',
-                                    }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="group bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-9 py-3 rounded-xl font-bold text-xl flex items-center space-x-3 shadow-2xl relative overflow-hidden cursor-pointer"
-                                >
-                                    <motion.div
-                                        className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                                    />
-                                    <span className="relative z-10">Launch App</span>
-                                    <ArrowRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform" />
-                                </motion.button>
-                            </Link>
+                            <motion.button
+                                whileHover={{ 
+                                    scale: 1.05,
+                                    boxShadow: '0 25px 50px rgba(59, 130, 246, 0.4)',
+                                }}
+                                onClick={() => {
+                                    if(!connected){
+                                        toast.error("Please connect your wallet first.", {
+                                            position: "bottom-right",
+                                            autoClose: 3000,
+                                            hideProgressBar: false,
+                                            closeOnClick: true,
+                                            pauseOnHover: true,
+                                            draggable: true,
+                                            progress: undefined,
+                                            theme: "dark",
+                                        });
+                                    }
+                                    else {
+                                        router.push('/stake');
+                                    }
+                                }}
+                                whileTap={{ scale: 0.95 }}
+                                className="group bg-gradient-to-r from-blue-600 to-cyan-500 text-white px-9 py-3 rounded-xl font-bold text-xl flex items-center space-x-3 shadow-2xl relative overflow-hidden cursor-pointer"
+                            >
+                                <motion.div
+                                    className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                                />
+                                <span className="relative z-10">Launch App</span>
+                                <ArrowRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform" />
+                            </motion.button>
                             
                             <motion.button
                                 whileHover={{ scale: 1.05 }}

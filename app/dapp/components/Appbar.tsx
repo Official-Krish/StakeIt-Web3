@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Coins, Image as ImageIcon, Home, Zap, WalletIcon } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import Image from 'next/image';
@@ -14,6 +14,7 @@ import { toast } from 'react-toastify';
 export default function Appbar() {
     const { connected } = useWallet();
     const pathname = usePathname(); 
+    const router = useRouter();
     const [isClient, setIsClient] = useState(false);
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
@@ -63,12 +64,30 @@ export default function Appbar() {
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.path;
+
+                            if(connected && (item.label === "Home")){
+                              return;
+                            }
                             
                             return (
-                                <Link
+                                <button
                                     key={item.path}
-                                    href={item.path}
-                                    className="relative"
+                                    className="relative cursor-pointer"
+                                    onClick={() => {
+                                      if((item.path === "/stake" || item.path === "/nft") && !connected) {
+                                        toast.error("Please connect your wallet to access this feature.", {
+                                            position: "bottom-right",
+                                            autoClose: 3000,
+                                            hideProgressBar: false,
+                                            closeOnClick: true,
+                                            pauseOnHover: true,
+                                            draggable: true,
+                                            progress: undefined,
+                                            theme: "dark",
+                                        });
+                                      }
+                                      router.push(item.path);
+                                    }}
                                 >
                                     <motion.div
                                         whileHover={{ scale: 1.05, y: -2 }}
@@ -82,7 +101,7 @@ export default function Appbar() {
                                         <Icon className="w-5 h-5" />
                                         <span>{item.label}</span>
                                     </motion.div>
-                                </Link>
+                                </button>
                             );
                         })}
                     </div>

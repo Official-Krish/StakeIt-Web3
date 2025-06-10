@@ -1,6 +1,7 @@
 "use client"
 import { motion } from "framer-motion"
 import { ArrowRight, Award, Shield, Zap } from "lucide-react";
+import Image from "next/image";
 
 export function Features () {
     const features = [
@@ -60,10 +61,12 @@ export function Features () {
                                         className="relative group"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                                        <img
+                                        <Image
                                             src={feature.image}
                                             alt={feature.title}
                                             className="relative w-full h-96 object-cover rounded-3xl shadow-2xl"
+                                            height={384}
+                                            width={576}
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-3xl" />
                                     </motion.div>
