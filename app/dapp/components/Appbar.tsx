@@ -4,7 +4,8 @@ import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { motion } from 'framer-motion';
 import { Coins, Image as ImageIcon, Home, Zap, WalletIcon } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import Image from 'next/image';
@@ -12,11 +13,27 @@ import { toast } from 'react-toastify';
 
 export default function Appbar() {
     const { connected } = useWallet();
+    const pathname = usePathname(); 
+    const [isClient, setIsClient] = useState(false);
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
         { path: '/stake', label: 'Stake', icon: Zap },
         { path: '/nft', label: 'NFTs', icon: ImageIcon },
     ];
+
+    // for client-side rendering
+    // to avoid hydration errors
+    useEffect(() => {
+        setIsClient(true); 
+    }, []);
+
+    useEffect(() => {
+        if (isClient && connected) {
+            document.cookie = 'walletConnected=true; path=/; SameSite=Lax';
+        } else if (isClient) {
+            document.cookie = 'walletConnected=false; path=/; SameSite=Lax';
+        }
+    }, [connected, isClient]);
 
     return (
         <motion.nav
@@ -45,7 +62,7 @@ export default function Appbar() {
                     <div className="flex items-center space-x-2">
                         {navItems.map((item) => {
                             const Icon = item.icon;
-                            const isActive = window.location.pathname == item.path;
+                            const isActive = pathname === item.path;
                             
                             return (
                                 <Link
@@ -70,20 +87,20 @@ export default function Appbar() {
                         })}
                     </div>
 
-                    {/* wallet Adapter */}
-                    {!connected ? (
-                        <WalletMultiButton className='rounded-2xl'>
-                            <WalletIcon className="h-8 w-8 text-white"/>
-                        </WalletMultiButton>
-                    ) : 
-                        <DropDown/>
-                    }
+                    {isClient && (
+                        !connected ? (
+                            <WalletMultiButton className='rounded-2xl'>
+                                <WalletIcon className="h-8 w-8 text-white"/>
+                            </WalletMultiButton>
+                        ) : (
+                            <DropDown/>
+                        )
+                    )}
                 </div>
             </div>
         </motion.nav>
     );
 };
-
 
 export const DropDown = () => {
     const { wallet, disconnect, select, wallets } = useWallet();

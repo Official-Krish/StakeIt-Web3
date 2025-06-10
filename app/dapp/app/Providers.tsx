@@ -7,7 +7,7 @@ import '@solana/wallet-adapter-react-ui/styles.css'
 import { clusterApiUrl } from '@solana/web3.js'
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
-    return <SessionProvider>
+    return (
         <ConnectionProvider endpoint={clusterApiUrl('devnet')}>
             <WalletProvider wallets={[]} autoConnect>
                 <WalletModalProvider>
@@ -15,5 +15,5 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
                 </WalletModalProvider>
             </WalletProvider>
         </ConnectionProvider>
-    </SessionProvider>
+    )
 }
