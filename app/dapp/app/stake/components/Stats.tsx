@@ -1,18 +1,34 @@
 "use client"
+import { getPdaAccountData } from "@/hooks/getPdaAccountData";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { motion } from "framer-motion"
 import { Activity, Gift, Target } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Stats() {
-    const handleClaimPoints = () => {
-        console.log("Points Claimed")
-    };
-    const user = {
-        stakedSol: 1,
-        availablePoints: 1
+    const wallet  = useAnchorWallet();
+    const [stakedAmount, setStakedAmount] = useState<number>(0);
+    const [points, setPoints] = useState<number>(0);
+    const router = useRouter();
+    useEffect (() => {
+        if (!wallet?.publicKey) return;
+        getData();
+    }, [wallet?.publicKey]);
+
+    async function getData() {
+        try {
+            const data = await getPdaAccountData(wallet!);
+            setPoints(data.totalPoints / 1000000); 
+            setStakedAmount(data.stakedAmount / 1e9);
+        } catch (error) {
+            console.error("Data fetch error:", error);
+        }
     }
-    const pointsPerSecond = user.stakedSol * 0.1;
+
+    const pointsPerSecond = stakedAmount * 0.1;
     const dailyEarnings = pointsPerSecond * 86400;
-    const apy = user.stakedSol > 0 ? ((dailyEarnings * 365) / user.stakedSol) * 100 : 0;
+    const apy = stakedAmount > 0 ? ((dailyEarnings * 365) / stakedAmount) * 100 : 0;
     return (
         <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -51,16 +67,15 @@ export default function Stats() {
                         </span>
                     </div>
                 </div>
-
                 <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={handleClaimPoints}
-                    disabled={user.availablePoints <= 0}
-                    className="w-full mt-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg"
+                    onClick={() => router.push("/nft")}
+                    disabled={points <= 0}
+                    className="w-full mt-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg cursor-pointer"
                 >
                     <Gift className="w-5 h-5" />
-                    <span>Claim {Math.floor(user.availablePoints).toLocaleString()} Points</span>
+                    <span>Claim {Math.floor(points).toLocaleString()} Points</span>
                 </motion.button>
             </div>
 
@@ -82,7 +97,7 @@ export default function Stats() {
                     { label: 'Intermediate', target: 50, reward: '10,000 pts' },
                     { label: 'Expert', target: 100, reward: '25,000 pts' },
                     ].map((goal) => {
-                        const progress = Math.min((user.stakedSol / goal.target) * 100, 100);
+                        const progress = Math.min((stakedAmount / goal.target) * 100, 100);
                         return (
                             <div key={goal.label} className="space-y-2">
                             <div className="flex justify-between text-sm">
@@ -97,7 +112,7 @@ export default function Stats() {
                                 />
                             </div>
                             <div className="text-xs text-gray-400">
-                                {user.stakedSol.toFixed(1)} / {goal.target} SOL
+                                {stakedAmount} / {goal.target} SOL
                             </div>
                             </div>
                         );

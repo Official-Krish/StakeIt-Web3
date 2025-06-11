@@ -310,10 +310,15 @@ export default function Staking () {
 
                             <div className="bg-orange-900/20 border border-orange-700/30 rounded-2xl p-6 mb-4">
                                 <h4 className="text-orange-400 font-bold mb-3">⚠️ Unstaking Notice</h4>
-                                <p className="text-orange-300">
-                                    Unstaking will immediately stop earning rewards on the withdrawn amount. 
+                                <p className="text-orange-300 mb-2">
+                                    • Unstaking will immediately stop earning rewards on the withdrawn amount. 
                                     You can restake anytime to resume earning.
                                 </p>
+                                <p className="text-orange-300">
+                                    • Unstaking requires a wallet approval to process the transaction.
+                                    You'll need to pay a small network fee (about 0.000005 SOL).
+                                </p>
+                                
                             </div>
                         </motion.div>
                     )}
