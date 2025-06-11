@@ -3,15 +3,82 @@ import { motion } from "framer-motion";
 import { Wallet, Coins, TrendingUp, BarChart3 } from 'lucide-react';
 import AnimatedCounter from "./AnimatedCounter";
 import Image from "next/image";
+import { getPdaAccountData } from "@/hooks/getPdaAccountData";
+import { useEffect, useState } from "react";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { CreatePda } from "@/hooks/useCreatePda";
 
 export function Hero () {
+    const wallet = useAnchorWallet();
+    const [totalPoints, setTotalPoints] = useState(0);
+    const [stakedAmount, setStakedAmount] = useState(0);
+    const [initialLoad, setInitialLoad] = useState(true); 
+    const [pdaCreated, setPdaCreated] = useState(false);
+
+    // Only run once on wallet connection
+    useEffect(() => {
+        if (!wallet?.publicKey || !initialLoad) return;
+
+        const initialize = async () => {
+            try {
+                await getData();
+                await createPdA();
+            } catch (error) {
+                console.error("Initialization error:", error);
+            } finally {
+                setInitialLoad(false);
+            }
+        };
+
+        initialize();
+    }, [wallet?.publicKey]); 
+
+    // Separate useEffect for periodic data refresh
+    useEffect(() => {
+        if (!wallet?.publicKey) return;
+
+        const interval = setInterval(() => {
+            getData();
+        }, 15000); // Refresh every 15 seconds
+
+        return () => clearInterval(interval);
+    }, [wallet?.publicKey]);
+
+    async function createPdA() {
+        if (pdaCreated) return;
+
+        try {
+            await CreatePda(wallet!);
+            setPdaCreated(true);
+        } catch (error) {
+            // Handle "account already exists" error gracefully
+            if (error instanceof Error && error.message.includes("already in use")) {
+                setPdaCreated(true);
+                return;
+            }
+            console.error("PDA creation error:", error);
+        }
+    }
+
+    async function getData() {
+        try {
+            const data = await getPdaAccountData(wallet!);
+            setTotalPoints(data.total_points);
+            setStakedAmount(data.staked_amount);
+        } catch (error) {
+            console.error("Data fetch error:", error);
+        }
+    }
+
+    
     const user = {
-        stakedSol: 1,
-        availablePoints: 1
+        stakedSol: stakedAmount,
+        availablePoints: 0, 
     }
     const pointsPerSecond = user.stakedSol * 0.1;
     const dailyEarnings = pointsPerSecond * 86400;
     const apy = user.stakedSol > 0 ? ((dailyEarnings * 365) / user.stakedSol) * 100 : 0;
+    
     return (
         <div className="mt-10">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-cyan-900/20" />
@@ -49,7 +116,7 @@ export function Hero () {
                     {[
                     {
                         label: 'Total Staked',
-                        value: `${user.stakedSol.toFixed(2)} SOL`,
+                        value: `${user.stakedSol} SOL`,
                         icon: Wallet,
                         color: 'from-blue-500 to-cyan-400',
                         bgColor: 'from-blue-600/20 to-cyan-600/20',
