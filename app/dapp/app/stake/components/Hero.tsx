@@ -22,7 +22,12 @@ export function Hero () {
         const initialize = async () => {
             try {
                 await getData();
-                await createPdA();
+                const pdaKey = `pda-created-${wallet.publicKey.toBase58()}`;
+                const isPdaCreated = localStorage.getItem(pdaKey);
+
+                if (!isPdaCreated) {
+                    createPdA();
+                }
             } catch (error) {
                 console.error("Initialization error:", error);
             } finally {
@@ -39,7 +44,7 @@ export function Hero () {
 
         const interval = setInterval(() => {
             getData();
-        }, 15000); // Refresh every 15 seconds
+        }, 15000); 
 
         return () => clearInterval(interval);
     }, [wallet?.publicKey]);
@@ -49,6 +54,7 @@ export function Hero () {
 
         try {
             await CreatePda(wallet!);
+            localStorage.setItem(`pda-created-${wallet!.publicKey.toBase58()}`, "true");
             setPdaCreated(true);
         } catch (error) {
             // Handle "account already exists" error gracefully
@@ -63,8 +69,8 @@ export function Hero () {
     async function getData() {
         try {
             const data = await getPdaAccountData(wallet!);
-            setTotalPoints(data.total_points);
-            setStakedAmount(data.staked_amount);
+            setTotalPoints(data.totalPoints / 1000000); 
+            setStakedAmount(data.stakedAmount / 1e9);
         } catch (error) {
             console.error("Data fetch error:", error);
         }
@@ -73,14 +79,14 @@ export function Hero () {
     
     const user = {
         stakedSol: stakedAmount,
-        availablePoints: 0, 
+        availablePoints: totalPoints, 
     }
     const pointsPerSecond = user.stakedSol * 0.1;
     const dailyEarnings = pointsPerSecond * 86400;
     const apy = user.stakedSol > 0 ? ((dailyEarnings * 365) / user.stakedSol) * 100 : 0;
     
     return (
-        <div className="mt-10">
+        <div className="mt-6">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 to-cyan-900/20" />
                 <div className="absolute inset-0 opacity-5">
                     <Image
@@ -92,7 +98,7 @@ export function Hero () {
                     />
                 </div>
             
-                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}

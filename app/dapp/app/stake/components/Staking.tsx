@@ -1,27 +1,134 @@
 "use client"
+import { getPdaAccountData } from "@/hooks/getPdaAccountData";
+import { StakeSol } from "@/hooks/useStaking";
+import { unStakeTokens } from "@/hooks/useUnstaking";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { Connection } from "@solana/web3.js";
 import { AnimatePresence, motion } from "framer-motion";
 import { Gift, Wallet, Zap } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 
 export default function Staking () {
+    const wallet = useAnchorWallet();
     const [activeTab, setActiveTab] = useState<'stake' | 'unstake'>('stake');
     const [stakeAmount, setStakeAmount] = useState('');
     const [unstakeAmount, setUnstakeAmount] = useState('');
     const [showClaimAnimation, setShowClaimAnimation] = useState(false);
+    const [stakedAmount, setStakedAmount] = useState(0);
 
-    const handleStake = () => {
-        console.log("Staked SOL")
-    };
+    useEffect(() => {
+        if (!wallet?.publicKey) return;
+        getData();
+    }, [wallet?.publicKey]);
 
-    const handleUnstake = () => {
-        console.log("Unstaked SOL")
-    };
-
-    const user = {
-        stakedSol: 1,
-        availablePoints: 1
+    async function getData() {
+        try {
+            const data = await getPdaAccountData(wallet!);
+            setStakedAmount(data.stakedAmount / 1e9);
+        } catch (error) {
+            console.error("Data fetch error:", error);
+        }
     }
+
+    if (!wallet) {
+        return (
+            <div className="text-center text-gray-400">
+                <p>Please connect your wallet to stake or unstake SOL.</p>
+            </div>
+        );
+    }
+
+    const handleStake = async () => {
+        const connection = new Connection("https://api.devnet.solana.com");
+
+        const balance = await connection.getBalance(wallet?.publicKey);
+        
+        if (balance < Number(stakeAmount) * 1e9 ) {
+            toast.error(
+                "Insufficient balance to stake this amount.",
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                }
+            )
+            return;
+        }
+        const res = await StakeSol(wallet, parseFloat(stakeAmount));
+        if (res.success){
+            toast.success(
+                `Successfully staked ${stakeAmount} SOL!`,
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,     
+                    draggable: true,
+                    progress: undefined,    
+                    theme: "dark",
+                }
+            );
+            setStakeAmount('');
+        } else {
+            toast.error(
+                `Failed to stake SOL: ${res.message}`,
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                }
+            );
+        }
+
+    };
+
+    const handleUnstake = async () => {
+        const res = await unStakeTokens(wallet, parseFloat(unstakeAmount))
+        if (res.success) {
+            toast.success(
+                `Successfully unstaked ${unstakeAmount} SOL!`,
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                }
+            );
+            setUnstakeAmount('');
+        }
+        else {
+            toast.error(
+                `Failed to unstake SOL: ${res.message}`,
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                }
+            );
+        }
+    };
 
     return (
         <motion.div
@@ -29,9 +136,9 @@ export default function Staking () {
             animate={{ opacity: 1, y: 0 }}
             className="lg:col-span-2"
         >
-            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-10 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 px-6 py-4 rounded-2xl border border-gray-700/50 backdrop-blur-sm mb-4">
                 {/* Enhanced Tab Navigation */}
-                <div className="flex space-x-2 bg-gray-700/30 rounded-2xl p-2 mb-10">
+                <div className="flex space-x-2 bg-gray-700/30 rounded-2xl p-2 mb-6">
                     {[
                     { key: 'stake', label: 'Stake SOL', icon: Zap },
                     { key: 'unstake', label: 'Unstake SOL', icon: Wallet },
@@ -41,7 +148,7 @@ export default function Staking () {
                             <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key as 'stake' | 'unstake')}
-                            className={`flex-1 py-4 px-6 rounded-xl font-bold transition-all flex items-center justify-center space-x-2 ${
+                            className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all flex items-center justify-center space-x-2  cursor-pointer ${
                                 activeTab === tab.key
                                 ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
                                 : 'text-gray-300 hover:text-white hover:bg-gray-600/30'
@@ -61,9 +168,9 @@ export default function Staking () {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="space-y-8"
+                            className="space-y-6"
                         >
-                            <div className="text-center mb-8">
+                            <div className="text-center mb-6">
                                 <h2 className="text-3xl font-bold text-white mb-2">Stake Your SOL</h2>
                                 <p className="text-gray-400">Start earning rewards immediately</p>
                             </div>
@@ -74,14 +181,14 @@ export default function Staking () {
                                 </label>
                                 <div className="relative">
                                     <input
-                                    type="number"
-                                    value={stakeAmount}
-                                    onChange={(e) => setStakeAmount(e.target.value)}
-                                    placeholder="0.00"
-                                    className="w-full bg-gray-700/50 border-2 border-gray-600 rounded-2xl px-6 py-6 text-white text-2xl font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                                        type="number"
+                                        value={stakeAmount}
+                                        onChange={(e) => setStakeAmount(e.target.value)}
+                                        placeholder="0.00"
+                                        className="w-full bg-gray-700/50 border-2 border-gray-600 rounded-2xl px-6 py-4 text-white text-xl font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                                     />
-                                    <div className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl font-bold">
-                                    SOL
+                                        <div className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl font-bold">
+                                        SOL
                                     </div>
                                 </div>
                             </div>
@@ -89,11 +196,11 @@ export default function Staking () {
                             <div className="grid grid-cols-4 gap-3">
                                 {[1, 5, 10, 25].map((amount) => (
                                     <motion.button
-                                    key={amount}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setStakeAmount(amount.toString())}
-                                    className="py-3 px-4 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all border border-gray-600/50 hover:border-blue-500/50"
+                                        key={amount}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => setStakeAmount(amount.toString())}
+                                        className="py-3 px-4 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all border border-gray-600/50 hover:border-blue-500/50  cursor-pointer"
                                     >
                                     {amount} SOL
                                     </motion.button>
@@ -105,14 +212,16 @@ export default function Staking () {
                                 whileTap={{ scale: 0.98 }}
                                 onClick={handleStake}
                                 disabled={!stakeAmount || parseFloat(stakeAmount) <= 0}
-                                className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-6 px-8 rounded-2xl font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 shadow-2xl"
-                                >
+                                className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-4 px-6 rounded-2xl font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3 shadow-2xl cursor-pointer"
+                            >
                                 <Zap className="w-6 h-6" />
                                 <span>Stake {stakeAmount || '0'} SOL</span>
                             </motion.button>
 
-                            <div className="bg-blue-900/20 border border-blue-700/30 rounded-2xl p-6">
-                                <h4 className="text-blue-400 font-bold mb-3">💡 Staking Benefits</h4>
+                            <div className="bg-blue-900/20 border border-blue-700/30 rounded-2xl p-4 mb-4">
+                                <h4 className="text-blue-400 font-bold mb-3">💡 
+                                    Staking Benefits
+                                </h4>
                                 <ul className="text-gray-300 space-y-2">
                                     <li>• Earn 0.1 points per SOL per second</li>
                                     <li>• No minimum staking period</li>
@@ -131,7 +240,7 @@ export default function Staking () {
                             exit={{ opacity: 0, x: -20 }}
                             className="space-y-8"
                         >
-                            <div className="text-center mb-8">
+                            <div className="text-center mb-6">
                                 <h2 className="text-3xl font-bold text-white mb-2">Unstake Your SOL</h2>
                                 <p className="text-gray-400">Withdraw your staked tokens</p>
                             </div>
@@ -146,40 +255,40 @@ export default function Staking () {
                                         value={unstakeAmount}
                                         onChange={(e) => setUnstakeAmount(e.target.value)}
                                         placeholder="0.00"
-                                        max={user.stakedSol}
-                                        className="w-full bg-gray-700/50 border-2 border-gray-600 rounded-2xl px-6 py-6 text-white text-2xl font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
+                                        max={stakedAmount}
+                                        className="w-full bg-gray-700/50 border-2 border-gray-600 rounded-2xl px-4 py-3 text-white text-2xl font-bold focus:outline-none focus:ring-4 focus:ring-orange-500/50 focus:border-orange-500 transition-all"
                                     />
                                     <div className="absolute right-6 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl font-bold">
                                         SOL
                                     </div>
                                 </div>
-                                <div className="text-gray-400 mt-2 text-lg">
-                                    Available: <span className="text-white font-bold">{user.stakedSol.toFixed(2)} SOL</span>
+                                <div className="text-gray-400 mt-3 text-lg">
+                                    Available SOL to unstake: <span className="text-white font-bold">{stakedAmount.toString()}</span>
                                 </div>
                             </div>
 
                             <div className="flex space-x-4">
                                 <button
-                                    onClick={() => setUnstakeAmount((user.stakedSol * 0.25).toString())}
-                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all"
+                                    onClick={() => setUnstakeAmount((stakedAmount * 0.25).toString())}
+                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all cursor-pointer"
                                 >
                                     25%
                                 </button>
                                 <button
-                                    onClick={() => setUnstakeAmount((user.stakedSol * 0.5).toString())}
-                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all"
+                                    onClick={() => setUnstakeAmount((stakedAmount * 0.5).toString())}
+                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all cursor-pointer"
                                 >
                                     50%
                                 </button>
                                 <button
-                                    onClick={() => setUnstakeAmount((user.stakedSol * 0.75).toString())}
-                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all"
+                                    onClick={() => setUnstakeAmount((stakedAmount * 0.75).toString())}
+                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all cursor-pointer"
                                 >
                                     75%
                                 </button>
                                 <button
-                                    onClick={() => setUnstakeAmount(user.stakedSol.toString())}
-                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all"
+                                    onClick={() => setUnstakeAmount(stakedAmount.toString())}
+                                    className="flex-1 py-3 bg-gray-700/30 hover:bg-gray-600/50 text-gray-300 hover:text-white rounded-xl font-bold transition-all cursor-pointer"
                                 >
                                     MAX
                                 </button>
@@ -192,14 +301,14 @@ export default function Staking () {
                                 disabled={
                                     !unstakeAmount || 
                                     parseFloat(unstakeAmount) <= 0 || 
-                                    parseFloat(unstakeAmount) > user.stakedSol
+                                    parseFloat(unstakeAmount) > stakedAmount
                                 }
-                                className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-6 px-8 rounded-2xl font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-4 px-6 rounded-2xl font-bold text-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                                 Unstake {unstakeAmount || '0'} SOL
                             </motion.button>
 
-                            <div className="bg-orange-900/20 border border-orange-700/30 rounded-2xl p-6">
+                            <div className="bg-orange-900/20 border border-orange-700/30 rounded-2xl p-6 mb-4">
                                 <h4 className="text-orange-400 font-bold mb-3">⚠️ Unstaking Notice</h4>
                                 <p className="text-orange-300">
                                     Unstaking will immediately stop earning rewards on the withdrawn amount. 

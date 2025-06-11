@@ -1,12 +1,12 @@
 import { BN } from "@coral-xyz/anchor";
 import { useContract } from "./contract";
+import { AnchorWallet } from "@solana/wallet-adapter-react";
 
 
-export function useUnStaking(wallet: any) {
+export async function unStakeTokens(wallet: AnchorWallet, amount: number) {
     const program = useContract(wallet);
 
-    const unStakeTokens = async (amount: number) => {
-        if (!wallet.connected) {
+        if (!wallet) {
             throw new Error("Wallet not connected");
         }
 
@@ -16,7 +16,7 @@ export function useUnStaking(wallet: any) {
             const txSignature = await program.methods
                 .unstake(new BN(UnStakeAmount))
                 .accounts({
-                    user: wallet?.adapter.publicKey,
+                    user: wallet.publicKey,
                 })
                 .rpc(); 
 
@@ -30,9 +30,5 @@ export function useUnStaking(wallet: any) {
             console.error("Staking error:", error);
             throw error;
         }
-    };
 
-    return {
-        unStakeTokens,
-    };
 }

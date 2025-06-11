@@ -1,3 +1,4 @@
+import { ProgramError } from "@coral-xyz/anchor";
 import { useContract } from "./contract";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 
@@ -21,7 +22,28 @@ export async function CreatePda(wallet: AnchorWallet) {
         };
 
     } catch (error) {
-        console.error("Staking error:", error);
-        throw error;
+        if (error instanceof ProgramError) {
+            // Error code 0x0 usually means "account already exists"
+            if (error.code === 0) {
+                return {
+                    success: true,
+                    exists: true,
+                    message: "PDA already exists",
+                };
+            }
+        }
+
+        // Handle transaction simulation failures
+        if (error instanceof Error && error.message.includes("already in use")) {
+            return {
+                success: true,
+                exists: true,
+                message: "PDA already exists",
+            };
+        }
+
+        console.error("PDA creation failed:", error);
+        throw new Error(`PDA creation failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+
     }
 }
