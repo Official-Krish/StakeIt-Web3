@@ -19,16 +19,15 @@ export default function Stats() {
     async function getData() {
         try {
             const data = await getPdaAccountData(wallet!);
-            setPoints(data.totalPoints / 1000000); 
-            setStakedAmount(data.stakedAmount / 1e9);
+            setPoints((data.totalPoints) / 1000); 
+            setStakedAmount(Number(data.stakedAmount) / 1e9);
         } catch (error) {
             console.error("Data fetch error:", error);
         }
     }
 
-    const pointsPerSecond = stakedAmount * 0.1;
-    const dailyEarnings = pointsPerSecond * 86400;
-    const apy = stakedAmount > 0 ? ((dailyEarnings * 365) / stakedAmount) * 100 : 0;
+    const pointsPerSecond = stakedAmount * 0.01;
+    const dailyEarnings = Math.floor(pointsPerSecond * 86400);
     return (
         <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -51,7 +50,7 @@ export default function Stats() {
                     <div className="flex justify-between items-center">
                         <span className="text-gray-300">Points/Second</span>
                         <span className="text-green-400 font-bold">
-                            +{pointsPerSecond.toFixed(1)}
+                            +{pointsPerSecond}
                         </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -63,7 +62,7 @@ export default function Stats() {
                     <div className="flex justify-between items-center">
                         <span className="text-gray-300">Points/Day</span>
                         <span className="text-green-400 font-bold">
-                            +{Math.floor(dailyEarnings).toLocaleString()}
+                            +{(dailyEarnings)}
                         </span>
                     </div>
                 </div>
@@ -75,7 +74,7 @@ export default function Stats() {
                     className="w-full mt-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-2xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg cursor-pointer"
                 >
                     <Gift className="w-5 h-5" />
-                    <span>Claim {Math.floor(points).toLocaleString()} Points</span>
+                    <span>Claim {(points).toFixed(0)} Points</span>
                 </motion.button>
             </div>
 

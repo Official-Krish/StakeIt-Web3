@@ -69,8 +69,8 @@ export function Hero () {
     async function getData() {
         try {
             const data = await getPdaAccountData(wallet!);
-            setTotalPoints(data.totalPoints / 1000000); 
-            setStakedAmount(data.stakedAmount / 1e9);
+            setTotalPoints(Number(data.totalPoints) / 1000); 
+            setStakedAmount(Number(data.stakedAmount) / 1e9);
         } catch (error) {
             console.error("Data fetch error:", error);
         }
@@ -81,9 +81,9 @@ export function Hero () {
         stakedSol: stakedAmount,
         availablePoints: totalPoints, 
     }
-    const pointsPerSecond = user.stakedSol * 0.1;
+    const pointsPerSecond = user.stakedSol * 0.01;
     const dailyEarnings = pointsPerSecond * 86400;
-    const apy = user.stakedSol > 0 ? ((dailyEarnings * 365) / user.stakedSol) * 100 : 0;
+    const apy = user.stakedSol > 0 ? (((dailyEarnings * 365) / user.stakedSol) * 100) / 10000000 : 0;
     
     return (
         <div className="mt-6">

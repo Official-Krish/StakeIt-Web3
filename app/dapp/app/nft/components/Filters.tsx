@@ -52,7 +52,7 @@ export default function Filters() {
             name: 'Crystalline Matrix',
             description: 'Perfect geometric formations representing the structure of decentralized networks',
             image: 'https://images.pexels.com/photos/1089455/pexels-photo-1089455.jpeg?auto=compress&cs=tinysrgb&w=800',
-            price: 800,
+            price: 100,
             rarity: 'rare',
             category: 'nature',
         },
@@ -114,14 +114,14 @@ export default function Filters() {
                 <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
                     <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
                         {/* Search */}
-                        <div className="relative flex-1 max-w-md">
-                            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <div className="relative flex-1 max-w-lg">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <input
                                 type="text"
                                 placeholder="Search NFTs..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full bg-gray-700/50 border border-gray-600 rounded-2xl pl-12 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                                className="w-full bg-gray-700/50 border border-gray-600 rounded-2xl pl-9 pr-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                             />
                         </div>
 
@@ -131,7 +131,7 @@ export default function Filters() {
                                 <button
                                     key={category}
                                     onClick={() => setSelectedCategory(category)}
-                                    className={`px-6 py-3 rounded-xl font-bold capitalize transition-all ${
+                                    className={`px-6 py-3 rounded-xl font-bold capitalize transition-all cursor-pointer ${
                                     selectedCategory === category
                                         ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white shadow-lg'
                                         : 'bg-gray-700/50 text-gray-300 hover:text-white hover:bg-gray-600/50'
@@ -146,7 +146,7 @@ export default function Filters() {
                         <div className="flex items-center space-x-2 bg-gray-700/30 rounded-xl p-1">
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`p-3 rounded-lg transition-all ${
+                                className={`p-3 rounded-lg transition-all cursor-pointer ${
                                     viewMode === 'grid'
                                     ? 'bg-pink-600 text-white'
                                     : 'text-gray-400 hover:text-white'
@@ -156,7 +156,7 @@ export default function Filters() {
                             </button>
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`p-3 rounded-lg transition-all ${
+                                className={`p-3 rounded-lg transition-all cursor-pointer ${
                                     viewMode === 'list'
                                     ? 'bg-pink-600 text-white'
                                     : 'text-gray-400 hover:text-white'

@@ -1,12 +1,31 @@
 "use client"
 import { AnimatePresence, motion } from "framer-motion";
 import { Coins, Crown, Gem, Sparkles, Star, Image as ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { getPdaAccountData } from "@/hooks/getPdaAccountData";
 
 export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts: any[], searchTerm: string, selectedCategory: string, viewMode: string } ) => {
     const [mintedNFTs, setMintedNFTs] = useState<string[]>([]);
     const [showMintAnimation, setShowMintAnimation] = useState<string | null>(null);
+
+    const wallet  = useAnchorWallet();
+    const [points, setPoints] = useState<number>(0);
+    useEffect (() => {
+        if (!wallet?.publicKey) return;
+        getData();
+    }, [wallet?.publicKey]);
+
+    async function getData() {
+        try {
+            const data = await getPdaAccountData(wallet!);
+            setPoints((data.totalPoints) / 1000); 
+        } catch (error) {
+            console.error("Data fetch error:", error);
+        }
+    }
+
     
     const filteredNFTs = nfts.filter(nft => {
         const matchesCategory = selectedCategory === 'all' || nft.category === selectedCategory;
@@ -56,7 +75,7 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                 {filteredNFTs.map((nft, index) => {
                     const RarityIcon = getRarityIcon(nft.rarity);
                     const isMinted = mintedNFTs.includes(nft.id);
-                    const canAfford = user.availablePoints >= nft.price;
+                    const canAfford = points >= nft.price;
                 
                     return (
                         <motion.div
@@ -93,7 +112,7 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                                 {isMinted && (
                                     <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center rounded-2xl">
                                         <div className="bg-green-500 text-white px-4 py-2 rounded-xl font-bold">
-                                        OWNED
+                                            OWNED
                                         </div>
                                     </div>
                                 )}
@@ -132,7 +151,7 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                                         isMinted
                                             ? 'bg-green-600 text-white cursor-default'
                                             : canAfford
-                                            ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-lg'
+                                            ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-lg cursor-pointer'
                                             : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                         }`}
                                     >
@@ -179,10 +198,10 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                     >
                         <ImageIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
                         <h3 className="text-3xl font-bold text-gray-400 mb-4">
-                        No NFTs Found
+                            No NFTs Found
                         </h3>
                         <p className="text-gray-500 text-xl">
-                        Try adjusting your search or category filters
+                            Try adjusting your search or category filters
                         </p>
                     </motion.div>
                 )}

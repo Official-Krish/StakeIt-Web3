@@ -1,15 +1,27 @@
 "use client"
+import { getPdaAccountData } from "@/hooks/getPdaAccountData";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { motion } from "framer-motion";
 import { Coins } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function Hero() {
+    const wallet  = useAnchorWallet();
+    const [points, setPoints] = useState<number>(0);
+    useEffect (() => {
+        if (!wallet?.publicKey) return;
+        getData();
+    }, [wallet?.publicKey]);
 
-    const user = {
-        stakedSol: 1,
-        availablePoints: 1
+    async function getData() {
+        try {
+            const data = await getPdaAccountData(wallet!);
+            setPoints((data.totalPoints) / 1000); 
+        } catch (error) {
+            console.error("Data fetch error:", error);
+        }
     }
-
     
     return (
         <div className="relative overflow-hidden">
@@ -43,7 +55,7 @@ export default function Hero() {
                     >
                         <Coins className="w-6 h-6 text-green-400" />
                         <span className="text-2xl font-black text-white">
-                            {Math.floor(user.availablePoints).toLocaleString()} Points Available
+                            {Math.floor(points).toLocaleString()} Points Available
                         </span>
                     </motion.div>
                 </motion.div>
