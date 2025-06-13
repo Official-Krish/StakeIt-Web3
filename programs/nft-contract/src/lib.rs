@@ -8,7 +8,7 @@ use anchor_spl::token::{mint_to, Mint, MintTo, Token, TokenAccount};
 use mpl_token_metadata::types::{DataV2};
 
 
-declare_id!("3S7Gbz3eoPgpm1p4LiRCNDwBfyYyeAPHQ9vaH6sZM4kr");
+declare_id!("7mEjdqGfFBtH3T6qWHBxTLwq2PoaYjZjr4zF2w8kZ5FY");
 #[program]
 pub mod nft_contract {
     use super::*;
@@ -20,6 +20,7 @@ pub mod nft_contract {
         uri: String,
         point_price: u64,
         base_price: u64,
+        nft_id: String,
     ) -> Result<()> {
         let mint_account = &ctx.accounts.mint;
         let mint_key = mint_account.key();
@@ -51,7 +52,7 @@ pub mod nft_contract {
                     payer: ctx.accounts.admin.to_account_info(),
                     mint: ctx.accounts.mint.to_account_info(),
                     metadata: ctx.accounts.nft_metadata.to_account_info(),
-                    mint_authority: ctx.accounts.mint.to_account_info(),
+                    mint_authority: ctx.accounts.admin.to_account_info(),
                     update_authority: ctx.accounts.admin.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
                     rent: ctx.accounts.rent.to_account_info(),
@@ -81,7 +82,7 @@ pub mod nft_contract {
                     payer: ctx.accounts.admin.to_account_info(),
                     mint: ctx.accounts.mint.to_account_info(),
                     metadata: ctx.accounts.nft_metadata.to_account_info(),
-                    mint_authority: ctx.accounts.mint.to_account_info(),
+                    mint_authority: ctx.accounts.admin.to_account_info(),
                     update_authority: ctx.accounts.admin.to_account_info(),
                     system_program: ctx.accounts.system_program.to_account_info(),
                     token_program: ctx.accounts.token_program.to_account_info(),
@@ -102,7 +103,7 @@ pub mod nft_contract {
         Ok(())
     }
 
-    pub fn buy_nft_with_points(ctx: Context<BuyNftWithPoints>) -> Result<()> {
+    pub fn buy_nft_with_points(ctx: Context<BuyNftWithPoints>, nft_id: String) -> Result<()> {
         let mint_account = &ctx.accounts.mint;
         let mint_key = mint_account.key();
         let seeds = &[
@@ -116,7 +117,7 @@ pub mod nft_contract {
                 MintTo {
                     mint: ctx.accounts.mint.to_account_info(),
                     to: ctx.accounts.user_token_account.to_account_info(),
-                    authority: ctx.accounts.mint_authority.to_account_info(),
+                    authority: ctx.accounts.admin.to_account_info(),
                 },
                 &[&seeds[..]],
             ),
@@ -126,7 +127,7 @@ pub mod nft_contract {
         Ok(())
     }
 
-    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, amount: u64) -> Result<()> {
+    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, amount: u64, nft_id: String) -> Result<()> {
 
         let nft_data = &ctx.accounts.nft_data;
         require!(amount > 0, CustomError::InvalidAmount);
@@ -150,7 +151,7 @@ pub mod nft_contract {
                 anchor_spl::token::Transfer {
                     from: ctx.accounts.seller_token_account.to_account_info(),
                     to: ctx.accounts.buyer_token_account.to_account_info(),
-                    authority: ctx.accounts.seller.to_account_info(),
+                    authority: ctx.accounts.admin.to_account_info(),
                 },
             ),
             1,
@@ -163,6 +164,7 @@ pub mod nft_contract {
    
 
 #[derive(Accounts)]
+#[instruction(nft_id: String)]
 pub struct CreateNftAsAdmin<'info> {
     #[account(mut, address = ADMIN_PUBKEY)] 
     pub admin: Signer<'info>,
@@ -178,9 +180,9 @@ pub struct CreateNftAsAdmin<'info> {
         init,
         payer = admin,
         mint::decimals = 0,
-        mint::authority = mint_authority.key(),
+        mint::authority = admin,
         mint::freeze_authority = admin,
-        seeds = [b"mint", mint.key().as_ref()],
+        seeds = [b"mint", admin.key().as_ref(), nft_id.as_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,
@@ -237,8 +239,9 @@ pub struct CreateNftAsAdmin<'info> {
 }
    
 #[derive(Accounts)]
+#[instruction(nft_id: String)]
 pub struct BuyNftWithPoints<'info> {
-    #[account(mut, address = ADMIN_PUBKEY)] 
+    #[account(mut, address = ADMIN_PUBKEY)]
     pub admin: Signer<'info>,
     #[account(mut)] 
     pub user: Signer<'info>,
@@ -251,7 +254,7 @@ pub struct BuyNftWithPoints<'info> {
 
     #[account(
         mut,
-        seeds = [b"mint", mint.key().as_ref()],
+        seeds = [b"mint", admin.key().as_ref(), nft_id.as_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,
@@ -278,6 +281,7 @@ pub struct BuyNftWithPoints<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(nft_id: String)]
 pub struct BuyNftWithSOL<'info> {
     #[account(mut, address = ADMIN_PUBKEY)] 
     pub admin: Signer<'info>,
@@ -294,7 +298,7 @@ pub struct BuyNftWithSOL<'info> {
 
     #[account(
         mut,
-        seeds = [b"mint", mint.key().as_ref()],
+        seeds = [b"mint", admin.key().as_ref(), nft_id.as_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,

@@ -6,14 +6,22 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-staking_contract = "3zwUW9CAKvJU4MYaKmuKCUn7CmZYsdAX5FMFt3dqbhnG"
+staking_contract = "BoN2bzEWpqnFcugMCzPec63EDyGA7LHLSMySdMJxiY7x"
+nft_contract = "7mEjdqGfFBtH3T6qWHBxTLwq2PoaYjZjr4zF2w8kZ5FY"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "https://api.devnet.solana.com"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
+test-nft = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nft-contract.ts"
+
+[workspace]
+members = [
+  "programs/staking-contract",
+  "programs/nft-contract"
+]

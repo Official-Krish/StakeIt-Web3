@@ -62,10 +62,11 @@ describe("staking-contract", () => {
     .signers([user])
     .rpc();
     const account = await program.account.stakeAccount.fetch(pdaAccount);
+    console.log("Points:", account.totalPoints.toString());
   })
 
   it("claims Points", async () => {
-    const tx = await program.methods.claimPoints().accounts({
+    const tx = await program.methods.claimPoints(0).accounts({
       user: user.publicKey,
     })
     .signers([user])
