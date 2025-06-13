@@ -13,6 +13,14 @@ declare_id!("7mEjdqGfFBtH3T6qWHBxTLwq2PoaYjZjr4zF2w8kZ5FY");
 pub mod nft_contract {
     use super::*;
 
+    pub fn initialize_counter(ctx: Context<InitializeCounter>) -> Result<()> {
+        let counter = &mut ctx.accounts.counter;
+        counter.count = 0;
+        counter.bump = ctx.bumps.counter;
+        Ok(())
+    }
+
+
     pub fn create_nft_as_admin(
         ctx: Context<CreateNftAsAdmin>,
         name: String,
@@ -20,7 +28,6 @@ pub mod nft_contract {
         uri: String,
         point_price: u64,
         base_price: u64,
-        nft_id: String,
     ) -> Result<()> {
         let mint_account = &ctx.accounts.mint;
         let mint_key = mint_account.key();
@@ -99,11 +106,14 @@ pub mod nft_contract {
         data.point_price = point_price;
         data.base_price = base_price;
         data.bump = ctx.bumps.nft_data;
-    
+        let counter = &mut ctx.accounts.counter;
+        let current_count = counter.count;
+        counter.count += 1;
+        
         Ok(())
     }
 
-    pub fn buy_nft_with_points(ctx: Context<BuyNftWithPoints>, nft_id: String) -> Result<()> {
+    pub fn buy_nft_with_points(ctx: Context<BuyNftWithPoints>) -> Result<()> {
         let mint_account = &ctx.accounts.mint;
         let mint_key = mint_account.key();
         let seeds = &[
@@ -127,7 +137,7 @@ pub mod nft_contract {
         Ok(())
     }
 
-    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, amount: u64, nft_id: String) -> Result<()> {
+    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, amount: u64) -> Result<()> {
 
         let nft_data = &ctx.accounts.nft_data;
         require!(amount > 0, CustomError::InvalidAmount);
@@ -164,8 +174,13 @@ pub mod nft_contract {
    
 
 #[derive(Accounts)]
-#[instruction(nft_id: String)]
 pub struct CreateNftAsAdmin<'info> {
+    #[account(
+        mut,
+        seeds = [b"nft_counter", admin.key().as_ref(), b"counter"],
+        bump = counter.bump
+    )]
+    pub counter: Account<'info, NftCounter>,
     #[account(mut, address = ADMIN_PUBKEY)] 
     pub admin: Signer<'info>,
 
@@ -182,7 +197,7 @@ pub struct CreateNftAsAdmin<'info> {
         mint::decimals = 0,
         mint::authority = admin,
         mint::freeze_authority = admin,
-        seeds = [b"mint", admin.key().as_ref(), nft_id.as_bytes()],
+        seeds = [b"mint", admin.key().as_ref(), &counter.count.to_le_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,
@@ -239,8 +254,13 @@ pub struct CreateNftAsAdmin<'info> {
 }
    
 #[derive(Accounts)]
-#[instruction(nft_id: String)]
 pub struct BuyNftWithPoints<'info> {
+    #[account(
+        mut,
+        seeds = [b"nft_counter", admin.key().as_ref(), b"counter"],
+        bump = counter.bump,
+    )]
+    pub counter: Account<'info, NftCounter>,
     #[account(mut, address = ADMIN_PUBKEY)]
     pub admin: Signer<'info>,
     #[account(mut)] 
@@ -254,7 +274,7 @@ pub struct BuyNftWithPoints<'info> {
 
     #[account(
         mut,
-        seeds = [b"mint", admin.key().as_ref(), nft_id.as_bytes()],
+        seeds = [b"mint", admin.key().as_ref(),  &counter.count.to_le_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,
@@ -281,8 +301,14 @@ pub struct BuyNftWithPoints<'info> {
 }
 
 #[derive(Accounts)]
-#[instruction(nft_id: String)]
 pub struct BuyNftWithSOL<'info> {
+    #[account(
+        mut,
+        seeds = [b"nft_counter", admin.key().as_ref(), b"counter"],
+        bump = counter.bump,
+    )]
+    pub counter: Account<'info, NftCounter>,
+
     #[account(mut, address = ADMIN_PUBKEY)] 
     pub admin: Signer<'info>,
     #[account(mut)] 
@@ -298,7 +324,7 @@ pub struct BuyNftWithSOL<'info> {
 
     #[account(
         mut,
-        seeds = [b"mint", admin.key().as_ref(), nft_id.as_bytes()],
+        seeds = [b"mint", admin.key().as_ref(),  &counter.count.to_le_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,
@@ -337,6 +363,29 @@ pub enum CustomError {
     InvalidAmount,
     #[msg("Invalid price provided.")]
     InvalidPrice,
+}
+
+#[account]
+pub struct NftCounter {
+    count: u64,
+    bump: u8,
+}
+
+#[derive(Accounts)]
+pub struct InitializeCounter<'info> {
+    #[account(
+        init,
+        payer = admin,
+        seeds = [b"nft_counter", admin.key().as_ref(), b"counter"],
+        bump,
+        space = 8 + 8 + 1 
+    )]
+    pub counter: Account<'info, NftCounter>,
+    
+    #[account(mut)]
+    pub admin: Signer<'info>,
+    
+    pub system_program: Program<'info, System>,
 }
 
 pub const ADMIN_PUBKEY: Pubkey = pubkey!("D8kz4JbFHtVcyE8AAcZGLeA28TwNm4JjpDaLBeqDzTwn");
