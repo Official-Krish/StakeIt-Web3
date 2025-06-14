@@ -107,13 +107,12 @@ pub mod nft_contract {
         data.base_price = base_price;
         data.bump = ctx.bumps.nft_data;
         let counter = &mut ctx.accounts.counter;
-        let current_count = counter.count;
         counter.count += 1;
         
         Ok(())
     }
 
-    pub fn buy_nft_with_points(ctx: Context<BuyNftWithPoints>) -> Result<()> {
+    pub fn buy_nft_with_points(ctx: Context<BuyNftWithPoints>, nft_index: u64) -> Result<()> {
         let mint_account = &ctx.accounts.mint;
         let mint_key = mint_account.key();
         let seeds = &[
@@ -137,7 +136,7 @@ pub mod nft_contract {
         Ok(())
     }
 
-    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, amount: u64) -> Result<()> {
+    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, amount: u64, nft_index: u64) -> Result<()> {
 
         let nft_data = &ctx.accounts.nft_data;
         require!(amount > 0, CustomError::InvalidAmount);
@@ -254,6 +253,7 @@ pub struct CreateNftAsAdmin<'info> {
 }
    
 #[derive(Accounts)]
+#[instruction(nft_index: u64)]
 pub struct BuyNftWithPoints<'info> {
     #[account(
         mut,
@@ -274,7 +274,7 @@ pub struct BuyNftWithPoints<'info> {
 
     #[account(
         mut,
-        seeds = [b"mint", admin.key().as_ref(),  &counter.count.to_le_bytes()],
+        seeds = [b"mint", admin.key().as_ref(),  &nft_index.to_le_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,
@@ -301,6 +301,7 @@ pub struct BuyNftWithPoints<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(nft_index: u64)]
 pub struct BuyNftWithSOL<'info> {
     #[account(
         mut,
@@ -324,7 +325,7 @@ pub struct BuyNftWithSOL<'info> {
 
     #[account(
         mut,
-        seeds = [b"mint", admin.key().as_ref(),  &counter.count.to_le_bytes()],
+        seeds = [b"mint", admin.key().as_ref(),  &nft_index.to_le_bytes()],
         bump
     )]
     pub mint: Account<'info, Mint>,

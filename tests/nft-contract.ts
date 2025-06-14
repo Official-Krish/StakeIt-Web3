@@ -20,7 +20,8 @@ describe("NFT-contract", async () => {
     let nftDataAccount : anchor.web3.PublicKey;
     let mintAuthority: anchor.web3.PublicKey;
     let nftMetadataAccount: anchor.web3.PublicKey;
-    let masterEditionAccount: anchor.web3.PublicKey; 
+    let masterEditionAccount: anchor.web3.PublicKey;
+    let nft_index;
     
     const MPL_TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey(
         "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
@@ -44,6 +45,7 @@ describe("NFT-contract", async () => {
     it("Create Nft as Admin", async () => {
         const counterData = await program.account.nftCounter.fetch(counterAccount);
         const currentCount = counterData.count.toNumber();
+        nft_index = currentCount;
         const countBuffer = new anchor.BN(currentCount).toArrayLike(Buffer, "le", 8);
         console.log("Count buffer as array:", Array.from(countBuffer));
         console.log("Count buffer hex:", countBuffer.toString('hex'));
@@ -88,8 +90,8 @@ describe("NFT-contract", async () => {
 
         const tx = await program.methods
         .createNftAsAdmin(
-            "Test NFT 3",
-            "TNFT 3",
+            "Test NFT Final",
+            "TNFT 4",
             "https://img.atom.com/story_images/visual_images/1706201190-Test_main.png?class=show",
             new anchor.BN(1000),
             new anchor.BN(1000000),
@@ -124,4 +126,44 @@ describe("NFT-contract", async () => {
         console.log("Transaction signature:", tx);
         
     });
+
+    it("Buy nft as user from points", async () => {
+        const userTokenAccount = await getAssociatedTokenAddress(
+            mint,
+            user.publicKey
+        );
+
+        const tx = await program.methods
+            .buyNftWithPoints(nft_index)
+            .accounts({
+                user: user.publicKey,
+            })
+            .signers([user, admin])
+            .rpc();
+
+        console.log("Transaction signature:", tx);
+        const userATA = await program.provider.connection.getAccountInfo(userTokenAccount);
+        assert.ok(userATA !== null, "User token account should exist after buying NFT");
+    })
+
+    it("Buy nft as user from SOL", async () => {
+        const userTokenAccount = await getAssociatedTokenAddress(
+            mint,
+            user.publicKey
+        );
+
+        const tx = await program.methods
+            .buyNftWithSol(new anchor.BN(1.5 * Math.pow(10, 9)), new anchor.BN(nft_index))
+            .accounts({
+                buyer: user.publicKey,
+                seller: admin.publicKey,
+            })
+            .signers([user, admin])
+            .rpc();
+
+        console.log("Transaction signature:", tx);
+        const userATA = await program.provider.connection.getAccountInfo(userTokenAccount);
+        assert.ok(userATA !== null, "User token account should exist after buying NFT");
+    });
+
 });
