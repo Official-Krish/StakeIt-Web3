@@ -21,42 +21,24 @@ describe("NFT-contract", async () => {
     let mintAuthority: anchor.web3.PublicKey;
     let nftMetadataAccount: anchor.web3.PublicKey;
     let masterEditionAccount: anchor.web3.PublicKey;
-    let nft_index;
+    const id = 1234;
     
     const MPL_TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey(
         "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
     );
 
-    let counterAccount: anchor.web3.PublicKey;
-    [counterAccount] = await anchor.web3.PublicKey.findProgramAddress(
-        [Buffer.from("nft_counter"), admin.publicKey.toBuffer(), Buffer.from("counter")],
-        program.programId
-    );
-
-    before(async () => {
-        await program.methods.initializeCounter()
-            .accounts({
-                admin: admin.publicKey,
-            })
-            .signers([admin])
-            .rpc();
-    });
+    // before(async () => {
+    //     await program.methods.initializeCounter()
+    //         .accounts({
+    //             admin: admin.publicKey,
+    //         })
+    //         .signers([admin])
+    //         .rpc();
+    // });
 
     it("Create Nft as Admin", async () => {
-        const counterData = await program.account.nftCounter.fetch(counterAccount);
-        const currentCount = counterData.count.toNumber();
-        nft_index = currentCount;
-        const countBuffer = new anchor.BN(currentCount).toArrayLike(Buffer, "le", 8);
-        console.log("Count buffer as array:", Array.from(countBuffer));
-        console.log("Count buffer hex:", countBuffer.toString('hex'));
-
         [mint] = await anchor.web3.PublicKey.findProgramAddress(
-            [Buffer.from("mint"), admin.publicKey.toBuffer(), new anchor.BN(currentCount).toArrayLike(Buffer, "le", 8)],
-            program.programId
-        );
-
-        [mintAuthority] = await anchor.web3.PublicKey.findProgramAddress(
-            [Buffer.from("mint_authority"), mint.toBuffer()],
+            [Buffer.from("mint"), admin.publicKey.toBuffer(), new anchor.BN(id).toArrayLike(Buffer, "le", 8), Buffer.from("Token")],
             program.programId
         );
 
@@ -83,33 +65,17 @@ describe("NFT-contract", async () => {
             MPL_TOKEN_METADATA_PROGRAM_ID
         );
 
-        const adminTokenAccount = await getAssociatedTokenAddress(
-            mint,
-            admin.publicKey
-        );
-
         const tx = await program.methods
         .createNftAsAdmin(
-            "Test NFT Final",
-            "TNFT 4",
+            "Token",
+            "token 4",
             "https://img.atom.com/story_images/visual_images/1706201190-Test_main.png?class=show",
             new anchor.BN(1000),
             new anchor.BN(1000000),
+            new anchor.BN(id)
         )
         .accounts({
-            counterAccount,
-            admin: admin.publicKey,
-            mint,
-            mintAuthority: mintAuthority,
-            nftData: nftDataAccount,
-            nftMetadata: nftMetadataAccount,
-            masterEditionAccount: masterEditionAccount,
-            tokenAccount: adminTokenAccount,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            systemProgram: anchor.web3.SystemProgram.programId,
-            rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-            metadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-            associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID, 
+            mint
         })
         .preInstructions([
             anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
@@ -122,9 +88,36 @@ describe("NFT-contract", async () => {
         const nftData = await program.account.nftData.fetch(nftDataAccount);
         assert.ok(nftData.pointPrice.eq(new anchor.BN(1000)));
         assert.ok(nftData.basePrice.eq(new anchor.BN(1000000)));
+        const nft = await program.provider.connection.getAccountInfo(mint);
+        console.log("NFT Mint Account Data:", JSON.stringify(nft.data));
 
         console.log("Transaction signature:", tx);
         
+    });
+
+    it("transfers nft to vault", async() => {
+        const tx = await program.methods
+            .batchMintToVault(new anchor.BN(id), new anchor.BN(1))
+            .accounts({
+                admin: admin.publicKey,
+                mint: mint,
+                tokenProgram: TOKEN_PROGRAM_ID,
+                associatedTokenProgram: anchor.utils.token.ASSOCIATED_PROGRAM_ID,
+                systemProgram: anchor.web3.SystemProgram.programId,
+                rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+            })
+            .signers([admin])
+            .rpc();
+        
+        const vaultTokenAccount = await getAssociatedTokenAddress(
+            mint,
+            admin.publicKey
+        );
+        const vaultATA = await program.provider.connection.getAccountInfo(vaultTokenAccount);
+        assert.ok(vaultATA !== null, "Vault token account should exist after minting NFT");
+        console.log("Vault Token Account:", vaultTokenAccount.toBase58());
+        console.log("Vault Token Account Data:", JSON.stringify(vaultATA.data));
+        console.log("Transaction signature:", tx);
     });
 
     it("Buy nft as user from points", async () => {
@@ -134,7 +127,14 @@ describe("NFT-contract", async () => {
         );
 
         const tx = await program.methods
-            .buyNftWithPoints(nft_index)
+            .buyNftWithPoints(
+                new anchor.BN(2345), 
+                "Token",
+                "token 4",
+                "https://img.atom.com/story_images/visual_images/1706201190-Test_main.png?class=show",
+                new anchor.BN(1000),
+                new anchor.BN(1000000),
+            )
             .accounts({
                 user: user.publicKey,
             })
@@ -153,7 +153,7 @@ describe("NFT-contract", async () => {
         );
 
         const tx = await program.methods
-            .buyNftWithSol(new anchor.BN(1.5 * Math.pow(10, 9)), new anchor.BN(nft_index))
+            .buyNftWithSol(new anchor.BN(1.5 * Math.pow(10, 9)), new anchor.BN(id))
             .accounts({
                 buyer: user.publicKey,
                 seller: admin.publicKey,
