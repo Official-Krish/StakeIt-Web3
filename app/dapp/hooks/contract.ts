@@ -16,3 +16,16 @@ export function useContract(wallet: AnchorWallet): Program {
     
     return program;
 }
+
+export function useNftContract(wallet: AnchorWallet): Program {
+    if (!wallet) {
+        throw new Error("Wallet not connected");
+    }
+    const connection = new Connection(network);
+    const provider = new AnchorProvider(connection, wallet, {});
+
+    const nftProgramIdl = require('../idl/nft_contract.json');
+    const nftProgram = new Program(nftProgramIdl as any, provider);
+    
+    return nftProgram;
+}

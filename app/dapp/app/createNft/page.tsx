@@ -249,7 +249,7 @@ function CreateNft() {
                                         type="number"
                                         value={nftForm.BasePrice}
                                         onChange={(e) => setNftForm({...nftForm, BasePrice: e.target.value})}
-                                        placeholder="5000"
+                                        placeholder="10"
                                         className="bg-gray-800"
                                     />
                                 </div>
