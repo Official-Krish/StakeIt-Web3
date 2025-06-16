@@ -10,9 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
+import { ADMIN_PUBLIC_KEY } from '@/config';
 
 export default function Appbar() {
-    const { connected } = useWallet();
+    const { connected, wallet } = useWallet();
     const pathname = usePathname(); 
     const router = useRouter();
     const [isClient, setIsClient] = useState(false);
@@ -20,6 +21,7 @@ export default function Appbar() {
         { path: '/', label: 'Home', icon: Home },
         { path: '/stake', label: 'Stake', icon: Zap },
         { path: '/nft', label: 'NFTs', icon: ImageIcon },
+        { path: '/createNft', label: 'CreateNft', icon: ImageIcon }
     ];
 
     // for client-side rendering
@@ -67,6 +69,10 @@ export default function Appbar() {
 
                             if(connected && (item.label === "Home")){
                               return;
+                            }
+
+                            if((wallet?.adapter.publicKey?.toString() !=  ADMIN_PUBLIC_KEY) && (item.label === "CreateNft")) {
+                                return null;
                             }
                             
                             return (

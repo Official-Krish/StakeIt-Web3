@@ -44,7 +44,7 @@ export function Hero () {
 
         const interval = setInterval(() => {
             getData();
-        }, 15000); 
+        }, 1000 * 60 * 5); 
 
         return () => clearInterval(interval);
     }, [wallet?.publicKey]);
