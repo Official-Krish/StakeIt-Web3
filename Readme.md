@@ -32,8 +32,8 @@ A web platform that allows users to **stake SOL**, earn **points**, and **mint N
 
 ```bash
 # Clone the repo
-git clone https://github.com/your-username/solana-stake-nft.git
-cd solana-stake-nft
+git clone https://github.com/Official-Krish/StakeIt-Web3
+cd StakeIt-Web3
 ```
 
 ### Install dependencies
