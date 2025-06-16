@@ -17,11 +17,17 @@ import Image from "next/image";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
 import { ADMIN_PUBLIC_KEY } from "@/config";
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SelectItem } from "@radix-ui/react-select";
+
 
 function CreateNft() {
     const { wallet } = useWallet();
     const [nfts, setNfts] = useState<[]>([]);
     const router = useRouter();
+    const [category, setCategory] = useState("");
+
+    const categories = ['genesis', 'animals', 'abstract', 'futuristic', 'nature', 'space', 'mythical'];
     
     const [nftForm, setNftForm] = useState({
         name: "",
@@ -29,8 +35,9 @@ function CreateNft() {
         uri: "",
         symbol: "",
         PointsCost: "",
-        BasePrice: ""
-
+        BasePrice: "",
+        category: "",
+        quantity: "",
     });
 
     const handleCreateNFT = async () => {
@@ -40,7 +47,9 @@ function CreateNft() {
             uri: nftForm.uri,
             symbol: nftForm.symbol,
             PointsCost: nftForm.PointsCost,
-            BasePrice: nftForm.BasePrice
+            BasePrice: nftForm.BasePrice,
+            category: category,
+            quantity: nftForm.quantity,
         })
 
         if (res.status === 201) {
@@ -63,7 +72,9 @@ function CreateNft() {
                 symbol: "",
                 PointsCost: "",
                 BasePrice: "",
-                uri: ""
+                uri: "",
+                category: "",
+                quantity: "",
             });
             getNfts();
         } else {
@@ -156,18 +167,54 @@ function CreateNft() {
                             </div>
 
                             <div className="space-y-2">
-                            <Label htmlFor="description">Description *</Label>
-                            <Textarea
-                                id="description"
-                                value={nftForm.description}
-                                onChange={(e) => setNftForm({...nftForm, description: e.target.value})}
-                                placeholder="Describe your NFT..."
-                                className="bg-gray-800 min-h-[100px]"
-                            />
+                                <Label htmlFor="description">Description *</Label>
+                                <Textarea
+                                    id="description"
+                                    value={nftForm.description}
+                                    onChange={(e) => setNftForm({...nftForm, description: e.target.value})}
+                                    placeholder="Describe your NFT..."
+                                    className="bg-gray-800 min-h-[100px]"
+                                />
                             </div>
 
+                            <div className="space-y-2 flex justify-between items-center">
+                                <div className=" text-white">
+                                    <Label>Select Category</Label>
+                                    <div className="mb-3"></div>
+                                    <Select onValueChange={(value) => setCategory(value)} value={category}>
+                                        <SelectTrigger className="w-60 text-white bg-gray-800">
+                                            <SelectValue placeholder="Select a category" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-gray-800 text-white border-border/50">
+                                            {categories.map((cat, index) => (
+                                                <SelectItem 
+                                                    key={index} 
+                                                    value={cat}
+                                                    className="hover:bg-gray-700 focus:bg-gray-700 cursor-pointer"
+                                                >
+                                                    {cat}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div>
+                                    <Label htmlFor="quantity">Quantity can be Minted *</Label>
+                                    <div className="mb-3"></div>
+                                    <Input
+                                        id="quantity"
+                                        type="number"
+                                        value={nftForm.quantity}
+                                        onChange={(e) => setNftForm({...nftForm, quantity: e.target.value})}
+                                        placeholder="5000"
+                                        className="bg-gray-800"
+                                    />
+                                </div>
+                            </div>
+                            
                             <div className="space-y-2">
-                            <Label htmlFor="image">Image URL</Label>
+                            <Label htmlFor="image">Image URL </Label>
                                 <div className="flex space-x-2">
                                     <Input
                                         id="image"
@@ -177,7 +224,7 @@ function CreateNft() {
                                     className="bg-gray-800"
                                     />
                                     <Button variant="outline" size="icon">
-                                        <Upload className="w-4 h-4" />
+                                        <Upload className="w-4 h-4 text-black" />
                                     </Button>
                                 </div>
                             </div>

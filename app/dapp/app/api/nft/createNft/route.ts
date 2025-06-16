@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
    try {
-        const { name, description, uri, symbol, PointsCost, BasePrice } = await req.json();
+        const { name, description, uri, symbol, PointsCost, BasePrice, category, quantity } = await req.json();
 
-        if (!name || !description || !uri || !symbol || !PointsCost || !BasePrice) {
+        if (!name || !description || !uri || !symbol || !PointsCost || !BasePrice || !quantity ) {
             return NextResponse.json(
                 { error: "All fields are required." },
                 { status: 400 }
@@ -20,6 +20,8 @@ export async function POST(req: NextRequest) {
                 symbol,
                 pointPrice: PointsCost, 
                 basePrice: BasePrice,
+                category: category || "Uncategorized",
+                qauntityAvailableToMint: Number(quantity) || 1,
             }
         });
 
