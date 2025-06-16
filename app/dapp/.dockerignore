@@ -1,0 +1,12 @@
+.next
+next-env.d.ts
+node_modules
+npm-debug.log
+yarn-error.log
+.DS_Store
+# Ignore build artifacts
+dist
+# Ignore local environment files
+.env.local
+.env.development.local  
+.env
