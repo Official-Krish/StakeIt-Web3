@@ -5,22 +5,39 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { getPdaAccountData } from "@/hooks/getPdaAccountData";
+import axios from "axios";
 
-export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts: any[], searchTerm: string, selectedCategory: string, viewMode: string } ) => {
-    const [mintedNFTs, setMintedNFTs] = useState<string[]>([]);
-    const [showMintAnimation, setShowMintAnimation] = useState<string | null>(null);
+interface nft {
+    id: string;
+    name: string;
+    uri: string;
+    description: string;
+    basePrice: string;
+    pointPrice: string;
+    category: string;
+    owned: false;
+    qauntityAvailableToMint: number;
+}
 
+export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm: string, selectedCategory: string, viewMode: string } ) => {
+    const [showMintAnimation, setShowMintAnimation] = useState<boolean>(false);
     const wallet  = useAnchorWallet();
     const [points, setPoints] = useState<number>(0);
+    const [nfts, setNfts] = useState<nft[]>([]);
+    const [getNfts, setGetNfts] = useState<boolean>(false);
+
     useEffect (() => {
-        if (!wallet?.publicKey) return;
+        if (!wallet?.publicKey || getNfts) return;
         getData();
+        setGetNfts(true);
     }, [wallet?.publicKey]);
 
     async function getData() {
         try {
             const data = await getPdaAccountData(wallet!);
             setPoints((data.totalPoints) / 1000); 
+            const res = await axios.get("/api/nft/getNfts");
+            setNfts(res.data);
         } catch (error) {
             console.error("Data fetch error:", error);
         }
@@ -34,48 +51,24 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
         return matchesCategory && matchesSearch;
     });
 
-    const getRarityIcon = (rarity: string) => {
-        switch (rarity) {
-        case 'legendary': return Crown;
-        case 'epic': return Gem;
-        case 'rare': return Star;
-        default: return Sparkles;
-        }
-    };
-
-    const getRarityColor = (rarity: string) => {
-        switch (rarity) {
-        case 'legendary': return 'from-yellow-400 to-orange-500';
-        case 'epic': return 'from-violet-400 to-pink-500';
-        case 'rare': return 'from-blue-400 to-cyan-500';
-        default: return 'from-gray-400 to-gray-500';
-        }
-    };
-
     const handleMint = (nft: any) => {
-        setMintedNFTs([...mintedNFTs, nft.id]);
-        setShowMintAnimation(nft.id);
-        setTimeout(() => setShowMintAnimation(null), 2000);
+        setShowMintAnimation(true);
+        setTimeout(() => {
+            setShowMintAnimation(false);
+        }, 4000);
     };
-
-    const user = {
-        stakedSol: 1,
-        availablePoints: 1
-    }
 
     return (
         <motion.div
             layout
             className={viewMode === 'grid' 
-                ? 'grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8' 
+                ? 'grid md:grid-cols-` lg:grid-cols-2 xl:grid-cols-3 gap-8' 
                 : 'space-y-6'
             }
         >
             <AnimatePresence>
                 {filteredNFTs.map((nft, index) => {
-                    const RarityIcon = getRarityIcon(nft.rarity);
-                    const isMinted = mintedNFTs.includes(nft.id);
-                    const canAfford = points >= nft.price;
+                    const canAfford = points >= Number(nft.pointPrice);
                 
                     return (
                         <motion.div
@@ -91,9 +84,9 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                             }`}
                         >
                             {/* NFT Image */}
-                            <div className={`relative ${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : ''}`}>
+                            <div className={`relative ${viewMode === 'list' ? 'w-full h-32 flex-shrink-0' : ''}`}>
                                 <Image
-                                    src={nft.image}
+                                    src={nft.uri}
                                     alt={nft.name}
                                     className={`object-cover ${
                                         viewMode === 'list' 
@@ -103,19 +96,6 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                                     width={viewMode === 'list' ? 128 : 256}
                                     height={viewMode === 'list' ? 128 : 256}
                                 />
-                                <div className={`absolute top-3 right-3 px-3 py-1 rounded-xl bg-gradient-to-r ${getRarityColor(nft.rarity)} flex items-center space-x-1`}>
-                                    <RarityIcon className="w-4 h-4 text-white" />
-                                    <span className="text-sm font-bold text-white capitalize">
-                                        {nft.rarity}
-                                    </span>
-                                </div>
-                                {isMinted && (
-                                    <div className="absolute inset-0 bg-green-500/20 flex items-center justify-center rounded-2xl">
-                                        <div className="bg-green-500 text-white px-4 py-2 rounded-xl font-bold">
-                                            OWNED
-                                        </div>
-                                    </div>
-                                )}
                             </div>
 
                             {/* NFT Info */}
@@ -132,12 +112,12 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                                         <div className={`flex items-center ${viewMode === 'list' ? 'space-x-6' : 'justify-between mb-6'}`}>
                                             <div className="flex items-center space-x-2">
                                                 <Coins className="w-5 h-5 text-yellow-400" />
-                                                <span className="text-2xl font-black text-white">
-                                                {nft.price.toLocaleString()}
+                                                    <span className="text-2xl font-black text-white">
+                                                    {nft.pointPrice} Points
                                                 </span>
                                             </div>
                                             <div className="text-sm text-gray-400 capitalize bg-gray-700/50 px-3 py-1 rounded-lg">
-                                                {nft.category}
+                                                {nft.category || 'uncategorized'}
                                             </div>
                                         </div>
                                     </div>
@@ -146,26 +126,45 @@ export const NftList = ( {nfts, searchTerm, selectedCategory, viewMode}: { nfts:
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => handleMint(nft)}
-                                        disabled={!canAfford || isMinted}
+                                        disabled={!canAfford }
                                         className={`${viewMode === 'list' ? 'ml-6' : 'w-full'} py-4 px-6 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all ${
-                                        isMinted
-                                            ? 'bg-green-600 text-white cursor-default'
-                                            : canAfford
+                                            canAfford
                                             ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-lg cursor-pointer'
                                             : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                         }`}
                                     >
-                                        <ImageIcon className="w-5 h-5"/>
-                                        <span>
-                                            {isMinted ? 'Owned' : canAfford ? 'Mint NFT' : 'Insufficient Points'}
-                                        </span>
+                                        { nft.owned ? (
+                                            <>
+                                                <Crown className="w-5 h-5" />
+                                                <span>Owned</span>
+                                            </>
+                                        ) : (
+                                            nft.qauntityAvailableToMint === 0 ? (
+                                                <>
+                                                    <Star className="w-5 h-5" />
+                                                    <span>Sold Out</span>
+                                                </>
+                                            ) :
+                                            canAfford ? (
+                                                <>
+                                                    <Gem className="w-5 h-5" />
+                                                    <span>Mint</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Star className="w-5 h-5" />
+                                                    <span>Insufficient Points</span>
+                                                </>
+                                            )
+                                        )}
+                                        {showMintAnimation && (
+                                            <Sparkles className="animate-spin w-5 h-5" />
+                                        )}
                                     </motion.button>
                                 </div>
                             </div>
-
-                            {/* Mint Animation */}
                             <AnimatePresence>
-                                {showMintAnimation === nft.id && (
+                                {showMintAnimation  && (
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.5 }}
                                         animate={{ opacity: 1, scale: 1 }}

@@ -277,7 +277,7 @@ function CreateNft() {
                                             className="w-12 h-12 rounded-lg object-cover mr-3"
                                         />
                                         <div>
-                                            <div className="font-medium">{nft.name}</div>
+                                            <div className="font-medium text-white">{nft.name}</div>
                                             <div className="text-sm text-muted-foreground">{nft.description}</div>
                                         </div>
                                         <div className="text-emerald-400 font-bold">{nft.pointPrice} PTS</div>

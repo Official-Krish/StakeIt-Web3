@@ -20,7 +20,7 @@ export default function Appbar() {
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
         { path: '/stake', label: 'Stake', icon: Zap },
-        { path: '/nft', label: 'NFTs', icon: ImageIcon },
+        { path: '/claimPoints', label: 'Claim Points', icon: ImageIcon },
         { path: '/createNft', label: 'CreateNft', icon: ImageIcon }
     ];
 

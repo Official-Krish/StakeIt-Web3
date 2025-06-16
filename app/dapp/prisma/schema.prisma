@@ -15,6 +15,8 @@ model Nft {
   uri         String
   pointPrice  BigInt
   basePrice   BigInt
+  category    category?
+  qauntityAvailableToMint    Int @default(1)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -40,4 +42,14 @@ model OwnedNft {
   createdAt DateTime @default(now())
 
   @@unique([userId, nftId])
+}
+
+enum category {
+  genesis
+  animals
+  abstract
+  futuristic
+  nature
+  space
+  mythical
 }

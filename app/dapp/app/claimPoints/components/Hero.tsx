@@ -1,10 +1,10 @@
 "use client"
-import { getPdaAccountData } from "@/hooks/getPdaAccountData";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { motion } from "framer-motion";
 import { Coins } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { getPdaAccountData } from "../../../hooks/getPdaAccountData";
 
 export default function Hero() {
     const wallet  = useAnchorWallet();
