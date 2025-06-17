@@ -2,15 +2,16 @@ import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { useNftContract } from "./contract";
 import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
+import { ADMIN_PUBLIC_KEY } from "@/config";
 
-export async function TradeNft(buyer: PublicKey, seller: PublicKey, id: number, price: number, sellerWallet: AnchorWallet ) {
-    const program = useNftContract(sellerWallet);
+export async function TradeNft(seller: PublicKey, id: number, price: number, BuyerWallet: AnchorWallet ) {
+    const program = useNftContract(BuyerWallet);
 
     try {
         const tx = await program.methods
-                .buyNftWithSol(new BN(id), new BN(price))
+                .buyNftWithSol(new BN(id))
                 .accounts({
-                    buyer: buyer,
+                    admin: ADMIN_PUBLIC_KEY,
                     seller: seller,
                 })
                 .rpc();

@@ -1,6 +1,7 @@
 import { clusterApiUrl, Connection } from "@solana/web3.js";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import idl from '../idl/staking_contract.json';
+import nftIdl from '../idl/nft_contract.json';
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 
 const network = clusterApiUrl("devnet");
@@ -24,8 +25,7 @@ export function useNftContract(wallet: AnchorWallet): Program {
     const connection = new Connection(network);
     const provider = new AnchorProvider(connection, wallet, {});
 
-    const nftProgramIdl = require('../idl/nft_contract.json');
-    const nftProgram = new Program(nftProgramIdl as any, provider);
+    const nftProgram = new Program(nftIdl as any, provider);
     
     return nftProgram;
 }
