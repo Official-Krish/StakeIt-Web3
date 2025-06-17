@@ -3,13 +3,17 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
     try {
-        const nfts = await prisma.nft.findMany();
+        const nfts = await prisma.nft.findMany({
+            where: {
+                Listed: true,
+            }
+        });
         const serializedNfts = nfts.map((nft) => ({
             ...nft,
             id: nft.id.toString(), 
             pointPrice: nft.pointPrice.toString(),
             basePrice: nft.basePrice.toString(),
-            AskPrice: nft.AskPrice === null ? "0" : nft.AskPrice.toString(),
+            AskPrice: nft.AskPrice!.toString(),
         }));
 
         return NextResponse.json(serializedNfts, { status: 200 });
@@ -19,5 +23,6 @@ export async function GET() {
             { error: "An error occurred while fetching NFTs." },
             { status: 500 }
         );
+        return;
     }
 }

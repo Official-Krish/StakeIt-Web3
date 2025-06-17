@@ -177,12 +177,12 @@ function CreateNft() {
                                 />
                             </div>
 
-                            <div className="space-y-2 flex justify-between items-center">
+                            <div className="space-y-2">
                                 <div className=" text-white">
                                     <Label>Select Category</Label>
                                     <div className="mb-3"></div>
                                     <Select onValueChange={(value) => setCategory(value)} value={category}>
-                                        <SelectTrigger className="w-60 text-white bg-gray-800">
+                                        <SelectTrigger className="w-full text-white bg-gray-800">
                                             <SelectValue placeholder="Select a category" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-gray-800 text-white border-border/50">
@@ -197,19 +197,6 @@ function CreateNft() {
                                             ))}
                                         </SelectContent>
                                     </Select>
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="quantity">Quantity can be Minted *</Label>
-                                    <div className="mb-3"></div>
-                                    <Input
-                                        id="quantity"
-                                        type="number"
-                                        value={nftForm.quantity}
-                                        onChange={(e) => setNftForm({...nftForm, quantity: e.target.value})}
-                                        placeholder="5000"
-                                        className="bg-gray-800"
-                                    />
                                 </div>
                             </div>
                             
