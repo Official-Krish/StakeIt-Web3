@@ -93,21 +93,21 @@ pub mod nft_contract {
     }
 
 
-    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, _id: u64, amount: u64) -> Result<()> {
-        let nft_data = &ctx.accounts.nft_data;
+    pub fn buy_nft_with_sol(ctx: Context<BuyNftWithSOL>, _id: u64) -> Result<()> {
+        let listing = &ctx.accounts.listing;
+        let amount = listing.price;
+
         require!(amount > 0, CustomError::InvalidAmount);
-        require!(amount >= nft_data.base_price, CustomError::InvalidPrice);
         require!(
             ctx.accounts.seller_token_account.amount >= 1,
             CustomError::InvalidAmount
         );
         
-        let royalty = (nft_data.base_price * 5) / 100;
 
         // Transfer main amount to seller
         let ix1 = system_instruction::transfer(
             ctx.accounts.buyer.key,
-            ctx.accounts.seller.key,
+            &listing.seller,
             amount,
         );
         anchor_lang::solana_program::program::invoke(
@@ -117,33 +117,56 @@ pub mod nft_contract {
                 ctx.accounts.seller.to_account_info(),
             ],
         )?;
-        
-        let ix2 = system_instruction::transfer(
-            ctx.accounts.buyer.key,
-            ctx.accounts.royalty_recipient.key,
-            royalty,
-        );
-        anchor_lang::solana_program::program::invoke(
-            &ix2,
-            &[
-                ctx.accounts.buyer.to_account_info(),
-                ctx.accounts.royalty_recipient.to_account_info(),
-            ],
-        )?;
 
-        // Transfer NFT from seller to buyer
+        let id = _id;
+
+        // Transfer NFT from pda to buyer
+        let id_bytes = id.to_le_bytes();
+        let marketplace_seeds = &[b"marketplace", id_bytes.as_ref(), listing.seller.as_ref()];
+        let signer_seeds = &[&marketplace_seeds[..]];
+
         transfer(
-            CpiContext::new(
+            CpiContext::new_with_signer(
                 ctx.accounts.token_program.to_account_info(),
                 Transfer {
                     from: ctx.accounts.seller_token_account.to_account_info(),
                     to: ctx.accounts.buyer_token_account.to_account_info(),
-                    authority: ctx.accounts.seller.to_account_info(),
+                    authority: ctx.accounts.marketplace_authority.to_account_info(),
                 },
+                signer_seeds
             ),
             1,
         )?;
         
+        let listing_account_info = ctx.accounts.listing.to_account_info();
+        let seller_account_info = ctx.accounts.seller.to_account_info();
+        
+        **seller_account_info.try_borrow_mut_lamports()? += listing_account_info.lamports();
+        **listing_account_info.try_borrow_mut_lamports()? = 0;
+        Ok(())
+    }
+
+    
+    pub fn list_nft(ctx: Context<ListNft>, price: u64) -> Result<()> {
+        let listing = &mut ctx.accounts.listing;
+        listing.seller = ctx.accounts.seller.key();
+        listing.price = price;
+        listing.bump = ctx.bumps.listing;
+
+
+        // Approve the marketplace PDA as delegate for the seller's token account
+        anchor_spl::token::approve(
+            CpiContext::new(
+                ctx.accounts.token_program.to_account_info(),
+                anchor_spl::token::Approve {
+                    to: ctx.accounts.seller_token_account.to_account_info(),
+                    delegate: ctx.accounts.marketplace_authority.to_account_info(),
+                    authority: ctx.accounts.seller.to_account_info(),
+                },
+            ),
+            1, 
+        )?;
+
         Ok(())
     }
 }
@@ -219,18 +242,23 @@ pub struct CreateNft<'info> {
 #[derive(Accounts)]
 #[instruction(id: u64)]
 pub struct BuyNftWithSOL<'info> {
-    #[account(mut, address = ADMIN_PUBKEY)] 
-    pub admin: Signer<'info>,
     #[account(mut)] 
     pub buyer: Signer<'info>,
-    #[account(mut)] 
-    pub seller: Signer<'info>,
+
+    /// CHECK: Seller account - validated through listing
+    #[account(mut)]
+    pub seller: UncheckedAccount<'info>,
 
     #[account(
-        seeds = [b"nft_data", mint.key().as_ref()],
-        bump = nft_data.bump,
+        mut,
+        seeds = [b"listing", id.to_le_bytes().as_ref(), seller.key().as_ref()],
+        bump,
+        close = seller
     )]
-    pub nft_data: Account<'info, NftData>,
+    pub listing: Account<'info, ListingData>,
+
+    /// CHECK: Admin account for mint seeds
+    pub admin: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -254,8 +282,12 @@ pub struct BuyNftWithSOL<'info> {
     )]
     pub buyer_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut, address = ADMIN_PUBKEY)]
-    pub royalty_recipient: Signer<'info>,
+    /// CHECK: This is the marketplace PDA that acts as delegate
+    #[account(
+        seeds = [b"marketplace", id.to_le_bytes().as_ref(), seller.key().as_ref()],
+        bump
+    )]
+    pub marketplace_authority: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -277,6 +309,43 @@ pub enum CustomError {
     #[msg("Invalid price provided.")]
     InvalidPrice,
 }
+
+#[derive(Accounts)]
+#[instruction(id: u64)]
+pub struct ListNft<'info> {
+    #[account(mut)]
+    pub seller: Signer<'info>,
+    
+    #[account(
+        init,
+        payer = seller,
+        space = 8 + 32 + 8 + 1,
+        seeds = [b"listing", id.to_le_bytes().as_ref(), seller.key().as_ref()],
+        bump
+    )]
+    pub listing: Account<'info, ListingData>,
+    
+    #[account(mut)]
+    pub seller_token_account: Account<'info, TokenAccount>,
+    
+    /// CHECK: This is the marketplace PDA that acts as delegate
+    #[account(
+        seeds = [b"marketplace", id.to_le_bytes().as_ref(), seller.key().as_ref()],
+        bump
+    )]
+    pub marketplace_authority: UncheckedAccount<'info>,
+    
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+}
+
+#[account]
+pub struct ListingData {
+    pub seller: Pubkey,
+    pub price: u64,
+    pub bump: u8,
+}
+
 
 
 pub const ADMIN_PUBKEY: Pubkey = pubkey!("D8kz4JbFHtVcyE8AAcZGLeA28TwNm4JjpDaLBeqDzTwn");
