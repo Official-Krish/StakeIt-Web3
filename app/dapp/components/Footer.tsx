@@ -161,7 +161,14 @@ export default function Footer() {
                                             transition={{ duration: 0.6 }}
                                             className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-lg"
                                         >
-                                            <Coins className="w-7 h-7 text-white" />
+                                            <Image
+                                                src={`/logo.jpeg`}
+                                                alt="StakeIT Logo"
+                                                width={48}
+                                                height={48}
+                                                className="w-full h-full rounded-2xl"
+                                                unoptimized
+                                            />
                                         </motion.div>
                                         <div>
                                             <span className="text-2xl font-black text-white">StakeIt</span>

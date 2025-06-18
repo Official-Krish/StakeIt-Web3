@@ -17,7 +17,6 @@ export default function Appbar() {
     const { connected, wallet } = useWallet();
     const pathname = usePathname(); 
     const router = useRouter();
-    const [isClient, setIsClient] = useState(false);
     const [isUserData, setIsUserData] = useState(false);
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
@@ -30,7 +29,6 @@ export default function Appbar() {
 
     useEffect(() => {
         if(!wallet?.adapter.publicKey || isUserData) return;
-        setIsClient(true); 
         storeUserData();
         setIsUserData(true);
     }, [wallet?.adapter.publicKey]);
@@ -50,12 +48,12 @@ export default function Appbar() {
     }
 
     useEffect(() => {
-        if (isClient && connected) {
+        if (connected) {
             document.cookie = 'walletConnected=true; path=/; SameSite=Lax';
-        } else if (isClient || !connected) {
+        } else if (!connected) {
             document.cookie = 'walletConnected=false; path=/; SameSite=Lax';
         }
-    }, [connected, isClient]);
+    }, [connected]);
 
     return (
         <motion.nav
@@ -72,7 +70,14 @@ export default function Appbar() {
                             transition={{ duration: 0.6 }}
                             className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-lg"
                         >
-                            <Coins className="w-7 h-7 text-white" />
+                            <Image
+                                src={`/logo.jpeg`}
+                                alt="StakeIT Logo"
+                                width={48}
+                                height={48}
+                                className="w-full h-full rounded-2xl"
+                                unoptimized
+                            />
                         </motion.div>
                         <div>
                             <span className="text-2xl font-black text-white">StakeIT</span>
@@ -99,7 +104,7 @@ export default function Appbar() {
                                     key={item.path}
                                     className="relative cursor-pointer"
                                     onClick={() => {
-                                      if((item.path === "/stake" || item.path === "/nft") && !connected) {
+                                      if(!connected && (item.label === "Stake" || item.label === "Claim Points" || item.label === "CreateNft" || item.label === "My Nfts")) {
                                         toast.error("Please connect your wallet to access this feature.", {
                                             position: "bottom-right",
                                             autoClose: 3000,
@@ -110,6 +115,7 @@ export default function Appbar() {
                                             progress: undefined,
                                             theme: "dark",
                                         });
+                                        return;
                                       }
                                       router.push(item.path);
                                     }}
@@ -131,7 +137,7 @@ export default function Appbar() {
                         })}
                     </div>
 
-                    {isClient && 
+                    { 
                       !connected ? (
                           <WalletMultiButton className='rounded-2xl'>
                               <WalletIcon className="h-8 w-8 text-white"/>
@@ -146,101 +152,140 @@ export default function Appbar() {
     );
 };
 
-export const DropDown = () => {
+const DropDown = () => {
     const { wallet, disconnect, select, wallets } = useWallet();
     const publicKey = wallet?.adapter.publicKey?.toBase58() || "";
     const [copied, setCopied] = useState(false);
     const [showWallets, setShowWallets] = useState(false);
-  
+    const [walletIcon, setWalletIcon] = useState<string | undefined>(undefined);
+    const [mounted, setMounted] = useState(false);
+    
+    useEffect(() => {
+        setMounted(true);
+        if (wallet?.adapter.icon) {
+            setWalletIcon(wallet.adapter.icon);
+        }
+    }, [wallet]);
+
     const handleCopy = () => {
-      navigator.clipboard.writeText(publicKey);
-      toast.info("Address copied to clipboard", {
-        position: "bottom-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        theme: "dark",
-      });
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
+        navigator.clipboard.writeText(publicKey);
+        toast.info("Address copied to clipboard", {
+            position: "bottom-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "dark",
+        });
+        setCopied(true);
+        setTimeout(() => setCopied(false), 3000);
     };
-  
+
+    if (!mounted) {
+        return (
+            <div className="w-10 h-10 rounded-full bg-gray-700 animate-pulse"></div>
+        );
+    }
+
     return (
-      <>
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex shadow-lg text-white cursor-pointer">
-            <Image 
-              src={wallet?.adapter.icon || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2uLl8zBoK0_iM5pNwJAC8hQ2f68YKtlgc7Q&s"}
-              alt="Avatar"
-              width={30}
-              height={30}
-              className="rounded-full mr-2"
-            />
-            {(wallet?.adapter.publicKey?.toString().slice(0,7).concat("...") || "")}
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-[180px] bg-gray-800 border-gray-600 items-center">
-            <DropdownMenuItem className="text-white cursor-pointer" onClick={handleCopy}>
-              {copied ? (
-                <div className="flex items-center">
-                  <span>Copied</span>
-                </div>
-              ) : (
-                <a className="flex items-center gap-2">
-                  <span>Copy Address</span>
-                </a>
-              )}
-            </DropdownMenuItem>
-            <Dialog>
-              <DialogTrigger asChild>
-                <DropdownMenuItem className="text-white cursor-pointer" onSelect={(e) => {
-                  e.preventDefault();
-                  setShowWallets(true);
-                }}>
-                  <span className="flex items-center gap-2">Change Wallet</span>
-                </DropdownMenuItem>
-              </DialogTrigger>
+        <>
+            <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center shadow-lg text-white cursor-pointer">
+                    <div className="w-8 h-8 rounded-full mr-2 overflow-hidden bg-gray-700">
+                        {walletIcon ? (
+                            <Image 
+                                src={walletIcon}
+                                alt="Wallet icon"
+                                width={32}
+                                height={32}
+                                className="object-cover w-full h-full"
+                                onError={() => setWalletIcon(undefined)}
+                                unoptimized
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-600">
+                                <WalletIcon className="w-5 h-5 text-gray-400" />
+                            </div>
+                        )}
+                    </div>
+                    <span className="hidden md:inline">
+                        {wallet?.adapter.publicKey?.toString().slice(0,7).concat("...") || ""}
+                    </span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[180px] bg-gray-800 border-gray-600 items-center">
+                    <DropdownMenuItem className="text-white cursor-pointer" onClick={handleCopy}>
+                        {copied ? (
+                            <div className="flex items-center">
+                                <span>Copied</span>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <span>Copy Address</span>
+                            </div>
+                        )}
+                    </DropdownMenuItem>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <DropdownMenuItem className="text-white cursor-pointer" onSelect={(e) => {
+                                e.preventDefault();
+                                setShowWallets(true);
+                            }}>
+                                <span className="flex items-center gap-2">Change Wallet</span>
+                            </DropdownMenuItem>
+                        </DialogTrigger>
+                    </Dialog>
+                    <DropdownMenuItem className="text-white cursor-pointer">
+                        <button onClick={() => disconnect()} className="flex items-center gap-2">
+                            Disconnect
+                        </button>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Dialog open={showWallets} onOpenChange={setShowWallets}>
+                <DialogContent className="bg-gray-900 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Select a Wallet</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-2 py-4 outline-none">
+                        {wallets.map((wlt) => (
+                            <button
+                                key={wlt.adapter.name}
+                                className={`w-full px-4 py-2 rounded-lg text-left hover:bg-gray-700 flex items-center gap-2 outline-none
+                                    ${wallet?.adapter.name === wlt.adapter.name ? 'bg-gray-700' : ''}`}
+                                onClick={() => {
+                                    select(wlt.adapter.name);
+                                    setShowWallets(false);
+                                }}
+                            >
+                                {wlt.adapter.icon ? (
+                                    <div className="w-5 h-5 relative">
+                                        <Image
+                                            src={wlt.adapter.icon}
+                                            alt={wlt.adapter.name}
+                                            width={20}
+                                            height={20}
+                                            className="object-contain"
+                                            onError={(e) => {
+                                                const target = e.currentTarget as HTMLImageElement;
+                                                target.src = '/wallet-icon-fallback.svg';
+                                            }}
+                                            unoptimized
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="w-5 h-5 bg-gray-600 rounded-full flex items-center justify-center">
+                                        <WalletIcon className="w-3 h-3 text-gray-400" />
+                                    </div>
+                                )}
+                                {wlt.adapter.name}
+                            </button>
+                        ))}
+                    </div>
+                </DialogContent>
             </Dialog>
-            <DropdownMenuItem className="text-white cursor-pointer">
-              <button onClick={() => disconnect()} className="flex items-center gap-2">
-                Disconnect
-              </button>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-  
-        <Dialog open={showWallets} onOpenChange={setShowWallets}>
-          <DialogContent className="bg-gray-900 text-white">
-            <DialogHeader>
-              <DialogTitle>Select a Wallet</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-2 py-4 outline-none">
-              {wallets.map((wlt) => (
-                <button
-                  key={wlt.adapter.name}
-                  className={`w-full px-4 py-2 rounded-lg text-left hover:bg-gray-700 flex items-center gap-2 outline-none
-                    ${wallet?.adapter.name === wlt.adapter.name ? 'bg-gray-700' : ''}`}
-                  onClick={() => {
-                    select(wlt.adapter.name);
-                    setShowWallets(false);
-                  }}
-                >
-                  {wlt.adapter.icon && (
-                    <Image
-                      src={wlt.adapter.icon}
-                      alt={wlt.adapter.name}
-                      width={20}
-                      height={20}
-                    />
-                  )}
-                  {wlt.adapter.name}
-                </button>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
-      </>
+        </>
     );
 };

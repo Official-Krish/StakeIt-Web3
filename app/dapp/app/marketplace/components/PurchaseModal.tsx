@@ -24,7 +24,19 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
     }, [])
     
     const confirmPurchase = async (nft: MarketplaceNFT) => {
-        if (!selectedNFT) return;
+        if (!selectedNFT || !wallet){
+            toast.error("No NFT selected or wallet not connected.", {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true, 
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+            return;
+        }
         
         setPurchaseStatus('processing');
         
