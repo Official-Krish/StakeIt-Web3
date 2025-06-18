@@ -6,24 +6,16 @@ import Image from "next/image";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { getPdaAccountData } from "@/hooks/getPdaAccountData";
 import axios from "axios";
-
-interface nft {
-    id: string;
-    name: string;
-    uri: string;
-    description: string;
-    basePrice: string;
-    pointPrice: string;
-    category: string;
-    owned: false;
-    qauntityAvailableToMint: number;
-}
+import { useClaimPonits } from "@/hooks/useClaimPoints";
+import { MintNft } from "@/hooks/mintNft";
+import { toast } from "react-toastify";
+import { nfts } from "@/types/nft";
 
 export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm: string, selectedCategory: string, viewMode: string } ) => {
     const [showMintAnimation, setShowMintAnimation] = useState<boolean>(false);
     const wallet  = useAnchorWallet();
     const [points, setPoints] = useState<number>(0);
-    const [nfts, setNfts] = useState<nft[]>([]);
+    const [nfts, setNfts] = useState<nfts[]>([]);
     const [getNfts, setGetNfts] = useState<boolean>(false);
 
     useEffect (() => {
@@ -51,11 +43,44 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
         return matchesCategory && matchesSearch;
     });
 
-    const handleMint = (nft: any) => {
+    const handleMint = async (nft: nfts) => {
         setShowMintAnimation(true);
-        setTimeout(() => {
-            setShowMintAnimation(false);
-        }, 4000);
+        await useClaimPonits(wallet!, Number(nft.pointPrice))
+        await MintNft(wallet!, Number(nft.id), nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
+        const res = await axios.post('/api/nft/mintNft', {
+            id: nft.id,
+            publicKey: wallet?.publicKey?.toBase58(),
+        });
+        if (res.status === 200) {
+            toast.success(
+                `NFT Minted successfully!`,
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,     
+                    draggable: true,
+                    progress: undefined,    
+                    theme: "dark",
+                }
+            );
+        } else {
+            toast.error(
+                `Error minting NFT: ${res.data}`,
+                {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true,
+                    pauseOnHover: true,     
+                    draggable: true,
+                    progress: undefined,    
+                    theme: "dark",
+                }
+            );
+        }
+        setShowMintAnimation(false);
     };
 
     return (
@@ -69,7 +94,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
             <AnimatePresence>
                 {filteredNFTs.map((nft, index) => {
                     const canAfford = points >= Number(nft.pointPrice);
-                
+                    console.log("NFT:", nft);
                     return (
                         <motion.div
                             key={nft.id}
@@ -125,21 +150,20 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        onClick={() => handleMint(nft)}
-                                        disabled={!canAfford }
+                                        disabled={!canAfford || nft.Minted || nft.Owner === wallet?.publicKey.toBase58()}
                                         className={`${viewMode === 'list' ? 'ml-6' : 'w-full'} py-4 px-6 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all ${
-                                            canAfford
+                                            canAfford || !nft.Minted || nft.Owner != wallet?.publicKey.toBase58()
                                             ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-lg cursor-pointer'
                                             : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                         }`}
                                     >
-                                        { nft.owned ? (
+                                        { nft.Owner === wallet?.publicKey.toBase58() ? (
                                             <>
                                                 <Crown className="w-5 h-5" />
                                                 <span>Owned</span>
                                             </>
                                         ) : (
-                                            nft.qauntityAvailableToMint === 0 ? (
+                                            nft.Minted ? (
                                                 <>
                                                     <Star className="w-5 h-5" />
                                                     <span>Sold Out</span>
@@ -147,8 +171,10 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                             ) :
                                             canAfford ? (
                                                 <>
-                                                    <Gem className="w-5 h-5" />
-                                                    <span>Mint</span>
+                                                    <div onClick={() => handleMint(nft)} className="flex items-center space-x-2">
+                                                        <Gem className="w-5 h-5" />
+                                                        <span>Mint</span>
+                                                    </div>
                                                 </>
                                             ) : (
                                                 <>

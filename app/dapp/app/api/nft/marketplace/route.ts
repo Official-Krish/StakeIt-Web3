@@ -23,6 +23,5 @@ export async function GET() {
             { error: "An error occurred while fetching NFTs." },
             { status: 500 }
         );
-        return;
     }
 }

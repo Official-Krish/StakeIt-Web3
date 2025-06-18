@@ -4,7 +4,7 @@ import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
 import { ADMIN_PUBLIC_KEY } from "@/config";
 
-export async function TradeNft(seller: PublicKey, id: number, price: number, BuyerWallet: AnchorWallet ) {
+export async function TradeNft(seller: PublicKey, id: number, BuyerWallet: AnchorWallet ) {
     const program = useNftContract(BuyerWallet);
 
     try {

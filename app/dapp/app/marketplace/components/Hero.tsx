@@ -7,6 +7,8 @@ import Image from 'next/image';
 import axios from 'axios';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { PurchaseModal } from './PurchaseModal';
+import { toast } from 'react-toastify';
+import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
 
 export function Hero() {
     const wallet = useAnchorWallet();
@@ -17,7 +19,6 @@ export function Hero() {
     const [showPurchaseModal, setShowPurchaseModal] = useState(false); 
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'price_low' | 'price_high' | 'newest' >('newest');
-    const [isLiked, setIsLiked] = useState<boolean>(false);
     const categories = ['all', 'genesis', 'animals', 'abstract', 'futuristic', 'nature', 'space', 'mythical'];
 
     const [selectedNFT, setSelectedNFT] = useState<MarketplaceNFT | null>(null);
@@ -30,17 +31,25 @@ export function Hero() {
 
     async function getData() {
         try {
-            const res = await axios.get("/api/marketplace");
+            const res = await axios.get("/api/nft/marketplace");
+            if (res.data.length === 0) {
+                toast.info("No NFTs found in the marketplace.", {
+                    position: "top-right",
+                    autoClose: 5000,
+                    hideProgressBar: false,
+                    closeOnClick: true, 
+                    pauseOnHover: true,
+                    draggable: true,
+                    progress: undefined,
+                    theme: "dark",
+                });
+                return;
+            }
             setNfts(res.data);
         } catch (error) {
             console.error("Data fetch error:", error);
         }
     }
-
-    const handlePurchase = (nft: MarketplaceNFT) => {
-        setSelectedNFT(nft);
-        setShowPurchaseModal(true);
-    };
 
     const filteredAndSortedNFTs = nfts
         .filter(nft => {
@@ -69,6 +78,8 @@ export function Hero() {
                             src="https://images.pexels.com/photos/7567443/pexels-photo-7567443.jpeg?auto=compress&cs=tinysrgb&w=1600"
                             alt="Background"
                             className="w-full h-full object-cover"
+                            width={1920}
+                            height={1080}
                         />
                     </div>
                 
@@ -185,7 +196,10 @@ export function Hero() {
                                     className={`relative bg-gradient-to-br from-gray-800/50 to-gray-900/50 rounded-3xl border border-gray-700/50 backdrop-blur-sm overflow-hidden group cursor-pointer ${
                                         viewMode === 'list' ? 'flex items-center p-6' : ''
                                     }`}
-                                    onClick={() => handlePurchase(nft)}
+                                    onClick={() => {
+                                        setSelectedNFT(nft);
+                                        setShowPurchaseModal(true);
+                                    }}
                                 >
                                 {/* NFT Image */}
                                 <div className={`relative ${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : ''}`}>
@@ -197,32 +211,19 @@ export function Hero() {
                                             ? 'w-full h-full rounded-2xl' 
                                             : 'w-full h-64'
                                         }`}
+                                        width={viewMode === 'list' ? 128 : 256}
+                                        height={viewMode === 'list' ? 128 : 256}
                                     />
-                                    
-
-                                    {/* Like Button */}
-                                    <button className="absolute top-3 left-3 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-xl flex items-center justify-center hover:bg-black/70 transition-colors"
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            setIsLiked(!isLiked);
-                                            await axios.post('/api/marketplace/likeNft', {
-                                                nftId: nft.id,
-                                                like: isLiked
-                                            });
-                                        }}
-                                    >
-                                        <Heart className={`w-5 h-5 ${isLiked ? 'text-red-500 fill-current' : 'text-white'}`} />
-                                    </button>
 
                                     {/* Hover Overlay */}
                                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                         <motion.button
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
-                                            className="bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold flex items-center space-x-2"
+                                            className="bg-cyan-600 text-white px-6 py-3 rounded-xl font-bold flex items-center space-x-2 cursor-pointer"
                                         >
                                             <ShoppingBag className="w-5 h-5" />
-                                            <span>Quick Buy</span>
+                                            <span>Buy</span>
                                         </motion.button>
                                     </div>
                                 </div>
@@ -238,18 +239,11 @@ export function Hero() {
                                                 <div className="flex items-center space-x-2">
                                                     <Wallet className="w-4 h-4 text-cyan-400" />
                                                     <span className="text-lg font-black text-white">
-                                                    {nft.AskPrice} SOL
+                                                    {Number(nft.AskPrice) / LAMPORTS_PER_SOL} SOL
                                                     </span>
                                                 </div>
                                                 <div className="text-sm text-gray-400 capitalize bg-gray-700/50 px-2 py-1 rounded-lg">
                                                     {nft.category}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center space-x-4 text-sm text-gray-400">
-                                                <div className="flex items-center space-x-1">
-                                                    <Heart className="w-4 h-4" />
-                                                    <span>{nft.Likes}</span>
                                                 </div>
                                             </div>
                                         </div>

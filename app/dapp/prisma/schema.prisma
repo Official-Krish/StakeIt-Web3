@@ -20,9 +20,11 @@ model Nft {
   Minted      Boolean @default(false)
   MintedAt    DateTime?
   MintedBy    String?
+  Owner       String?
   Listed      Boolean @default(false)
   ListedAt    DateTime?
   Likes       Int      @default(0)
+  lastSalesPrice String? @default("You are the first buyer")
   createdAt   DateTime @default(now())
 }
 

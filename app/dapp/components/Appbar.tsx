@@ -2,7 +2,7 @@
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { motion } from 'framer-motion';
-import { Coins, Image as ImageIcon, Home, Zap, WalletIcon } from 'lucide-react';
+import { Coins, Image as ImageIcon, Home, Zap, WalletIcon, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -11,24 +11,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import Image from 'next/image';
 import { toast } from 'react-toastify';
 import { ADMIN_PUBLIC_KEY } from '@/config';
+import axios from 'axios';
 
 export default function Appbar() {
     const { connected, wallet } = useWallet();
     const pathname = usePathname(); 
     const router = useRouter();
     const [isClient, setIsClient] = useState(false);
+    const [isUserData, setIsUserData] = useState(false);
     const navItems = [
         { path: '/', label: 'Home', icon: Home },
         { path: '/stake', label: 'Stake', icon: Zap },
         { path: '/claimPoints', label: 'Claim Points', icon: ImageIcon },
-        { path: '/createNft', label: 'CreateNft', icon: ImageIcon }
+        { path: '/createNft', label: 'CreateNft', icon: ImageIcon }, 
+        { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
+        { path: '/myNfts', label: 'My Nfts', icon: ImageIcon },
     ];
 
-    // for client-side rendering
-    // to avoid hydration errors
     useEffect(() => {
+        if(!wallet?.adapter.publicKey || isUserData) return;
         setIsClient(true); 
-    }, []);
+        storeUserData();
+        setIsUserData(true);
+    }, [wallet?.adapter.publicKey]);
+
+    async function storeUserData() {
+      if(wallet?.adapter.publicKey) {
+        const res = await axios.post('/api/user', {
+          publicKey: wallet.adapter.publicKey.toString(),
+          name: wallet.adapter.name || 'Unknown',
+        });
+        if (res.status === 200) {
+          localStorage.setItem('userId', res.data);
+        }
+      } else {
+        console.log("No wallet connected, user data not stored.");
+      }
+    }
 
     useEffect(() => {
         if (isClient && connected) {

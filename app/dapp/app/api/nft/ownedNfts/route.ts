@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const MintedBy = searchParams.get("MintedBy");
-    if (!MintedBy) {
+    const Owner = searchParams.get("Owner");
+    if (!Owner) {
         return NextResponse.json(
             { error: "MintedBy parameter is required." },
             { status: 400 }
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     try {
         const nfts = await prisma.nft.findMany({
             where: {
-                MintedBy: MintedBy
+                Owner: Owner
             }
         });
         const serializedNfts = nfts.map((nft) => ({

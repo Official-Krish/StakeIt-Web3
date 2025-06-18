@@ -8,6 +8,7 @@ export interface MarketplaceNFT {
     category: string;
     AskPrice: string;
     Likes: number;
+    Owner: string;
 }
 
 export interface OwnedNFT {
@@ -20,9 +21,23 @@ export interface OwnedNFT {
     category: string;
     AskPrice: string;
     Likes: number;
-    MintedBy: string;
+    Owner: string;
     MintedAt: string;
     lastSalePrice: string;
     Listed: boolean;
-    lastSalesPrice: "12";
+    lastSalesPrice: string;
+}
+
+export interface nfts {
+    id: string;
+    name: string;
+    uri: string;
+    description: string;
+    basePrice: string;
+    pointPrice: string;
+    category: string;
+    Owner: string;
+    MintedAt: string;
+    Minted: boolean;
+    Listed: boolean;
 }

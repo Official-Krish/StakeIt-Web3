@@ -3,6 +3,7 @@ import { useContract } from "./contract";
 
 
 export async function useClaimPonits(wallet: AnchorWallet, redeem_points: number) {
+    console.log("useClaimPoints called with redeem_points:", redeem_points);
     const program  = useContract(wallet);
 
     if (!wallet.publicKey) {

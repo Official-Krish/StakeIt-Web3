@@ -1,3 +1,4 @@
+"use client"
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -18,8 +19,9 @@ import { OwnedNFT } from '@/types/nft';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import axios from 'axios';
 import Image from 'next/image';
-
-
+import { ListNft } from '@/hooks/listNft';
+import { toast } from 'react-toastify';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export default function MyNFTs() {
     const wallet = useAnchorWallet();
@@ -45,7 +47,7 @@ export default function MyNFTs() {
       try {
           const res = await axios.get("/api/nft/ownedNfts", {
               params: {
-                MintedBy: wallet?.publicKey?.toBase58(),
+                Owner: wallet?.publicKey?.toBase58(),
               },
           });
           setNfts(res.data);
@@ -82,20 +84,44 @@ export default function MyNFTs() {
     };
 
     const confirmSell = async () => {
-      if (!selectedNFT || !sellPrice) return;
-      
+      if (!selectedNFT || !sellPrice) return;      
       setSellStatus('processing');
-      
-      // Simulate listing process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setSellStatus('success');
-      setTimeout(() => {
-        setShowSellModal(false);
-        setSelectedNFT(null);
-        setSellStatus('idle');
-        setSellPrice('');
-      }, 2000);
+      ListNft(wallet!, Number(sellPrice) * 1000000000, Number(selectedNFT.id))
+      const res = await axios.post('/api/nft/listNft', {
+        Owner: wallet?.publicKey?.toBase58(),
+        NftId: selectedNFT.id,
+        Price: Number(sellPrice) * 1000000000,
+      });
+      if (res.status === 200){
+        toast.success('NFT listed successfully!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        });
+        setSellStatus('success');
+      } else {
+        toast.error('Failed to list NFT. Please try again.', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        });
+        setSellStatus('error');
+        return;
+      }
+      setShowSellModal(false);
+      setSelectedNFT(null);
+      setSellStatus('idle');
+      setSellPrice('');
     };
 
     return (
@@ -107,6 +133,8 @@ export default function MyNFTs() {
               <Image
                 src="https://images.pexels.com/photos/7567443/pexels-photo-7567443.jpeg?auto=compress&cs=tinysrgb&w=1600"
                 alt="Background"
+                height={800}
+                width={1600}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -296,12 +324,21 @@ export default function MyNFTs() {
                             </div>
 
                             <div className="flex items-center justify-between mb-4">
-                              {nft.lastSalePrice && (
+                              {nft.lastSalePrice != "You are the first buyer" && (
                                 <div className="text-right">
                                   <div className="text-xs text-gray-400">Last Sale</div>
                                   <div className="text-lg font-bold text-white flex items-center space-x-1">
                                     <Wallet className="w-4 h-4 text-cyan-400" />
                                     <span>{nft.lastSalePrice} SOL</span>
+                                  </div>
+                                </div>
+                              )}
+                              {nft.lastSalePrice === "You are the first buyer" && (
+                                <div className="text-right">
+                                  <div className="text-xs text-gray-400">Base Price</div>
+                                  <div className="text-lg font-bold text-white flex items-center space-x-1">
+                                    <Wallet className="w-4 h-4 text-cyan-400" />
+                                    <span>{nft.basePrice} SOL</span>
                                   </div>
                                 </div>
                               )}
@@ -312,7 +349,7 @@ export default function MyNFTs() {
                                 <div className="text-green-400 text-sm font-medium mb-1">Listed Price</div>
                                 <div className="text-xl font-black text-white flex items-center space-x-2">
                                   <Wallet className="w-5 h-5 text-green-400" />
-                                  <span>{nft.AskPrice} SOL</span>
+                                  <span>{Number(nft.AskPrice)/ LAMPORTS_PER_SOL} SOL</span>
                                 </div>
                               </div>
                             )}
@@ -326,7 +363,7 @@ export default function MyNFTs() {
                               className="ml-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold flex items-center space-x-2"
                             >
                               <Tag className="w-5 h-5" />
-                              <span>{nft.Listed ? 'Update Listing' : 'List for Sale'}</span>
+                              <span>{nft.Listed ? 'Listed' : 'List for Sale'}</span>
                             </motion.button>
                           )}
                         </div>
@@ -336,10 +373,11 @@ export default function MyNFTs() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleSell(nft)}
+                            disabled={nft.Listed}
                             className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2"
                           >
                             <Tag className="w-5 h-5" />
-                            <span>{nft.Listed ? 'Update Listing' : 'List for Sale'}</span>
+                            <span>{nft.Listed ? 'Listed' : 'List for Sale'}</span>
                           </motion.button>
                         )}
                       </div>

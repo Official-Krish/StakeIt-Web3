@@ -1,30 +1,47 @@
 "use client";
+import { TradeNft } from "@/hooks/transferNft";
+import { MarketplaceNFT } from "@/types/nft";
+import { useAnchorWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion"
 import { AlertCircle, CheckCircle, Heart, ShoppingBag, Wallet, X } from "lucide-react";
 import Image from "next/image"
 import { useState } from "react";
+import { toast } from "react-toastify";
 
-export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNFT } : { selectedNFT: any, setShowPurchaseModal: () => void, setSelectedNFT: () => void }) => {   
+export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNFT } : { selectedNFT: any, setShowPurchaseModal: () => void, setSelectedNFT: () => void }) => {  
+    const wallet = useAnchorWallet();; 
     const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
-    const confirmPurchase = async () => {
+    
+    const confirmPurchase = async (nft: MarketplaceNFT) => {
         if (!selectedNFT) return;
         
         setPurchaseStatus('processing');
         
         // Simulate purchase process
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Check if user has enough SOL (mock check)
-        const userSOL = 50; // Mock user SOL balance
-        if (userSOL >= Number(selectedNFT.AskPrice)) {
-        setPurchaseStatus('success');
-        setTimeout(() => {
-            setShowPurchaseModal();
-            setSelectedNFT();
-            setPurchaseStatus('idle');
-        }, 2000);
-        } else {
-        setPurchaseStatus('error');
+        await TradeNft(new PublicKey(nft.Owner), Number(nft.id), wallet!);
+        try {
+            axios.post('/api/nft/purchaseNft', {
+                nftId: nft.id,
+                buyer: wallet?.publicKey?.toString(),
+                price: nft.AskPrice,
+                
+            });
+            setPurchaseStatus('success');
+            toast.success(`Successfully purchased ${nft.name}!`, {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true, 
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } catch (error) {
+            setPurchaseStatus('error');
+            console.error("Purchase error:", error);
         }
     };
     return <div>
@@ -62,7 +79,9 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                             <Image
                                 src={selectedNFT.uri}
                                 alt={selectedNFT.name}
-                            className="w-full h-80 object-cover rounded-2xl"
+                                width={500}
+                                height={500}
+                                className="w-full h-80 object-cover rounded-2xl"
                             />
                         </div>
                     </div>
@@ -88,21 +107,12 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                                     <div className="flex items-center space-x-2">
                                         <Wallet className="w-5 h-5 text-cyan-400" />
                                         <span className="text-2xl font-black text-white">
-                                            {selectedNFT.AskPrice} SOL
+                                            {selectedNFT.AskPrice / LAMPORTS_PER_SOL} SOL
                                         </span>
                                     </div>
                                 </div>
                                 <div className="text-sm text-gray-400">
-                                    ≈ ${(Number(selectedNFT.AskPrice) * 180).toFixed(2)} USD
-                                </div>
-                            </div>
-
-                            {/* Stats */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gray-700/30 rounded-xl p-4 text-center">
-                                    <Heart className="w-6 h-6 text-gray-400 mx-auto mb-2" />
-                                    <div className="text-xl font-bold text-white">{selectedNFT.Likes}</div>
-                                    <div className="text-sm text-gray-400">Likes</div>
+                                    ≈ ${(Number(selectedNFT.AskPrice / LAMPORTS_PER_SOL) * 180).toFixed(2)} USD
                                 </div>
                             </div>
 
@@ -110,7 +120,7 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={confirmPurchase}
+                                onClick={() => confirmPurchase(selectedNFT)}
                                 disabled={purchaseStatus === 'processing'}
                                 className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -136,7 +146,7 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                                 ) : (
                                     <>
                                         <ShoppingBag className="w-5 h-5" />
-                                        <span>Buy Now for {selectedNFT.AskPrice} SOL</span>
+                                        <span>Buy Now for {selectedNFT.AskPrice / LAMPORTS_PER_SOL} SOL</span>
                                     </>
                                 )}
                             </motion.button>

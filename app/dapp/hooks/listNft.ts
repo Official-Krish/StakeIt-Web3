@@ -19,7 +19,7 @@ export async function ListNft(wallet: AnchorWallet, price: number, id: number) {
             wallet.publicKey
         )
         const tx = await program.methods
-            .listNft(new BN(price * LAMPORTS_PER_SOL))
+            .listNft(new BN(price))
             .accounts({
                 sellerTokenAccount: tokenAccount,
                 seller: wallet.publicKey,
@@ -27,7 +27,7 @@ export async function ListNft(wallet: AnchorWallet, price: number, id: number) {
         
         return {
             success: true,
-            signature: await tx.rpc(),
+            signature: tx,
             message: "Nft listed successfully"
         }
     } catch (error) {
