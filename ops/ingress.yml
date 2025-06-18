@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-nginx
+  namespace: stakeit
+  
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - stakeIT.krishdev.xyz
+      secretName: stakeit-tls
+
+  rules:
+    - host: stakeIT.krishdev.xyz
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stakeit
+                port:
+                  number: 80

@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stakeit
+  namespace: stakeit
+  labels:
+    app: stakeit
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stakeit
+  template:
+    metadata:
+      labels:
+        app: stakeit
+    spec:
+      containers:
+        - name: stakeit
+          image: krishanand01/stakeit:v1
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: env-file
+              mountPath: /app/.env
+              subPath: env
+      volumes:
+        - name: env-file
+          secret:
+            secretName: stakeit-secret
