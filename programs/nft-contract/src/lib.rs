@@ -122,7 +122,12 @@ pub mod nft_contract {
 
         // Transfer NFT from pda to buyer
         let id_bytes = id.to_le_bytes();
-        let marketplace_seeds = &[b"marketplace", id_bytes.as_ref(), listing.seller.as_ref()];
+        let marketplace_seeds = &[
+            b"marketplace", 
+            id_bytes.as_ref(), 
+            listing.seller.as_ref(),
+            &[ctx.bumps.marketplace_authority]
+        ];
         let signer_seeds = &[&marketplace_seeds[..]];
 
         transfer(
@@ -147,7 +152,7 @@ pub mod nft_contract {
     }
 
     
-    pub fn list_nft(ctx: Context<ListNft>, price: u64) -> Result<()> {
+    pub fn list_nft(ctx: Context<ListNft>, price: u64, _id: u64) -> Result<()> {
         let listing = &mut ctx.accounts.listing;
         listing.seller = ctx.accounts.seller.key();
         listing.price = price;
@@ -201,7 +206,7 @@ pub struct CreateNft<'info> {
         payer = user,
         seeds = [b"nft_data", mint.key().as_ref()],
         bump,
-        space = 8 + std::mem::size_of::<NftData>()
+        space = 8 + 32 + 8 + 8 + 1
     )]
     pub nft_data: Account<'info, NftData>,
 
@@ -311,21 +316,35 @@ pub enum CustomError {
 }
 
 #[derive(Accounts)]
-#[instruction(id: u64)]
+#[instruction(price: u64, id: u64)]
 pub struct ListNft<'info> {
     #[account(mut)]
     pub seller: Signer<'info>,
     
     #[account(
-        init,
+        init_if_needed,
         payer = seller,
         space = 8 + 32 + 8 + 1,
         seeds = [b"listing", id.to_le_bytes().as_ref(), seller.key().as_ref()],
         bump
     )]
     pub listing: Account<'info, ListingData>,
+
+    /// CHECK: Admin account for mint seeds
+    pub admin: UncheckedAccount<'info>,
+
+    #[account(
+        mut,
+        seeds = [b"mint", admin.key().as_ref(), id.to_le_bytes().as_ref()],
+        bump
+    )]
+    pub mint: Account<'info, Mint>,
     
-    #[account(mut)]
+    #[account(
+        mut,
+        associated_token::mint = mint,
+        associated_token::authority = seller
+    )]
     pub seller_token_account: Account<'info, TokenAccount>,
     
     /// CHECK: This is the marketplace PDA that acts as delegate
@@ -337,6 +356,8 @@ pub struct ListNft<'info> {
     
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 #[account]
