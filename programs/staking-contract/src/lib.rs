@@ -4,7 +4,7 @@ use anchor_lang::system_program;
 
 declare_id!("BoN2bzEWpqnFcugMCzPec63EDyGA7LHLSMySdMJxiY7x");
 
-const POINTS_PER_SOL_PER_DAY: u64 = 1_000_000; 
+const POINTS_PER_SOL_PER_DAY: u64 = 864; 
 const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
 const SECONDS_PER_DAY: u64 = 86_400;
 
@@ -90,13 +90,13 @@ pub mod staking_contract {
         // Update points to current time
         update_points(pda_account, clock.unix_timestamp)?;
         
-        let claimable_points = pda_account.total_points / 1_000_000; // Convert micro-points to points
+        let claimable_points = pda_account.total_points; 
         
         msg!("User has {} claimable points", claimable_points);
         require!(claimable_points >= amount as u64, StakeError::InsufficientStake);
         
         // Reset points after claiming (or you could track claimed vs unclaimed separately)
-        pda_account.total_points = pda_account.total_points.checked_sub(amount as u64 * 1_000_000)
+        pda_account.total_points = pda_account.total_points.checked_sub(amount as u64)
             .ok_or(StakeError::Underflow)?;
         
         Ok(())
@@ -138,17 +138,19 @@ fn update_points(pda_account: &mut StakeAccount, current_timestamp: i64) -> Resu
 }
 
 fn calculate_points(staked_amount: u64, time_elapsed: i64) -> Result<u64> {
-    // Points = (staked_amount_in_sol * time_in_days * points_per_sol_per_day)
-    // Using micro-points for precision to avoid floating point
+    // Points = (staked_amount_in_sol * time_in_seconds * points_per_sol_per_second)
+    // Rate: 864 points per SOL per day = 0.01 points per SOL per second
+    // Calculate points with precision
+    // Formula: (staked_lamports * time_seconds * points_per_sol_per_day) / (lamports_per_sol * seconds_per_day)
     let points = (staked_amount as u128)
-    .checked_mul(time_elapsed as u128)
-    .ok_or(StakeError::Overflow)?
-    .checked_mul(POINTS_PER_SOL_PER_DAY as u128)
-    .ok_or(StakeError::Overflow)?
-    .checked_div(LAMPORTS_PER_SOL as u128)
-    .ok_or(StakeError::Overflow)?
-    .checked_div(SECONDS_PER_DAY as u128)
-    .ok_or(StakeError::Overflow)?;
+        .checked_mul(time_elapsed as u128)
+        .ok_or(StakeError::Overflow)?
+        .checked_mul(POINTS_PER_SOL_PER_DAY as u128)
+        .ok_or(StakeError::Overflow)?
+        .checked_div(LAMPORTS_PER_SOL as u128)
+        .ok_or(StakeError::Overflow)?
+        .checked_div(SECONDS_PER_DAY as u128)
+        .ok_or(StakeError::Overflow)?;
 
     Ok(points as u64)
 }
@@ -218,7 +220,9 @@ pub struct GetPoints<'info> {
         constraint = pda_account.owner == user.key() @ StakeError::Unauthorized,
     )]
     pub pda_account: Account<'info, StakeAccount>,
-    pub user: Signer<'info>,
+
+    ///CHECK: The user account that is querying their points
+    pub user: UncheckedAccount<'info>,
 }
 
 #[account]
