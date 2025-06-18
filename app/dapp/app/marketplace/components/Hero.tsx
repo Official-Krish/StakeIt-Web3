@@ -8,7 +8,7 @@ import axios from 'axios';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { PurchaseModal } from './PurchaseModal';
 import { toast } from 'react-toastify';
-import { LAMPORTS_PER_SOL, PublicKey } from '@solana/web3.js';
+import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export function Hero() {
     const wallet = useAnchorWallet();
@@ -19,7 +19,7 @@ export function Hero() {
     const [showPurchaseModal, setShowPurchaseModal] = useState(false); 
     const [selectedCategory, setSelectedCategory] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'price_low' | 'price_high' | 'newest' >('newest');
-    const categories = ['all', 'genesis', 'animals', 'abstract', 'futuristic', 'nature', 'space', 'mythical'];
+    const categories = ['All', 'Genesis', 'Animals', 'Abstract', 'Futuristic', 'Nature', 'Space', 'Mythical'];
 
     const [selectedNFT, setSelectedNFT] = useState<MarketplaceNFT | null>(null);
 
@@ -109,7 +109,7 @@ export function Hero() {
                         <div className="bg-gradient-to-br from-gray-800/50 to-gray-900/50 p-8 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
                             <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
                                 {/* Search */}
-                                <div className="relative flex-1 max-w-md">
+                                <div className="relative flex-1 max-w-md cursor-pointer">
                                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                                     <input
                                         type="text"
@@ -121,11 +121,11 @@ export function Hero() {
                                 </div>
 
                                 {/* Filters */}
-                                <div className="flex flex-wrap gap-4">
+                                <div className="flex flex-wrap gap-4 cursor-pointer">
                                     <select
                                         value={selectedCategory}
                                         onChange={(e) => setSelectedCategory(e.target.value)}
-                                        className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                        className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
                                     >
                                         {categories.map(category => (
                                             <option key={category} value={category} className="capitalize">
@@ -137,7 +137,7 @@ export function Hero() {
                                     <select
                                         value={sortBy}
                                         onChange={(e) => setSortBy(e.target.value as any)}
-                                        className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                                        className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
                                     >
                                         <option value="newest">Newest</option>
                                         <option value="price_low">Price: Low to High</option>
@@ -150,7 +150,7 @@ export function Hero() {
                                 <div className="flex items-center space-x-2 bg-gray-700/30 rounded-xl p-1">
                                     <button
                                         onClick={() => setViewMode('grid')}
-                                        className={`p-3 rounded-lg transition-all ${
+                                        className={`p-3 rounded-lg transition-all cursor-pointer ${
                                             viewMode === 'grid'
                                             ? 'bg-cyan-600 text-white'
                                             : 'text-gray-400 hover:text-white'
@@ -160,7 +160,7 @@ export function Hero() {
                                     </button>
                                     <button
                                         onClick={() => setViewMode('list')}
-                                        className={`p-3 rounded-lg transition-all ${
+                                        className={`p-3 rounded-lg transition-all cursor-pointer ${
                                             viewMode === 'list'
                                             ? 'bg-cyan-600 text-white'
                                             : 'text-gray-400 hover:text-white'

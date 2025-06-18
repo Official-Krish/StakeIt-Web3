@@ -109,7 +109,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                             }`}
                         >
                             {/* NFT Image */}
-                            <div className={`relative ${viewMode === 'list' ? 'w-full h-32 flex-shrink-0' : ''}`}>
+                            <div className={`relative ${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : ''}`}>
                                 <Image
                                     src={nft.uri}
                                     alt={nft.name}
@@ -150,12 +150,13 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        disabled={!canAfford || nft.Minted || nft.Owner === wallet?.publicKey.toBase58()}
+                                        disabled={!canAfford && nft.Minted && nft.Owner === wallet?.publicKey.toBase58()}
                                         className={`${viewMode === 'list' ? 'ml-6' : 'w-full'} py-4 px-6 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all ${
-                                            canAfford || !nft.Minted || nft.Owner != wallet?.publicKey.toBase58()
+                                            canAfford && !nft.Minted && nft.Owner != wallet?.publicKey.toBase58()
                                             ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-lg cursor-pointer'
                                             : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                         }`}
+                                        onClick={() => handleMint(nft)}
                                     >
                                         { nft.Owner === wallet?.publicKey.toBase58() ? (
                                             <>
@@ -171,10 +172,8 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                             ) :
                                             canAfford ? (
                                                 <>
-                                                    <div onClick={() => handleMint(nft)} className="flex items-center space-x-2">
-                                                        <Gem className="w-5 h-5" />
-                                                        <span>Mint</span>
-                                                    </div>
+                                                    <Gem className="w-5 h-5" />
+                                                    <span>Mint</span>
                                                 </>
                                             ) : (
                                                 <>

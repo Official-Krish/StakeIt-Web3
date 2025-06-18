@@ -7,12 +7,21 @@ import axios from "axios";
 import { AnimatePresence, motion } from "framer-motion"
 import { AlertCircle, CheckCircle, Heart, ShoppingBag, Wallet, X } from "lucide-react";
 import Image from "next/image"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNFT } : { selectedNFT: any, setShowPurchaseModal: () => void, setSelectedNFT: () => void }) => {  
     const wallet = useAnchorWallet();; 
     const [purchaseStatus, setPurchaseStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+    const [usdPrice, setUsdPrice] = useState<number>(0);
+
+    useEffect(() => {
+        const getPrice = async () => {
+            const res = await axios.get("https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112")
+            setUsdPrice(Number(res.data.data.So11111111111111111111111111111111111111112.price));
+        }
+        getPrice();
+    }, [])
     
     const confirmPurchase = async (nft: MarketplaceNFT) => {
         if (!selectedNFT) return;
@@ -61,11 +70,11 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                     onClick={(e) => e.stopPropagation()}
                 >
                 {/* Modal Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                <div className="flex items-center justify-between p-4 border-b border-gray-700">
                     <h2 className="text-2xl font-black text-white">Purchase NFT</h2>
                     <button
                         onClick={() => setShowPurchaseModal()}
-                        className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                        className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
                     <X className="w-5 h-5" />
                     </button>
@@ -75,7 +84,7 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                 <div className="p-6">
                     <div className="grid md:grid-cols-2 gap-8">
                         {/* NFT Image */}
-                        <div className="relative">
+                        <div className="flex justify-center items-center">
                             <Image
                                 src={selectedNFT.uri}
                                 alt={selectedNFT.name}
@@ -87,32 +96,29 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                     </div>
 
                     {/* NFT Details */}
-                    <div className="space-y-6">
-                        <div>
+                    <div>
+                        <div className="py-6">
                             <h3 className="text-3xl font-black text-white mb-2">
                                 {selectedNFT.name}
                             </h3>
-                            <p className="text-gray-400 mb-4">
-                                by {selectedNFT.MintedBy}
-                            </p>
                             <p className="text-gray-300 leading-relaxed">
                                 {selectedNFT.description}
                             </p>
                         </div>
 
                             {/* Price Info */}
-                            <div className="bg-gray-700/30 rounded-2xl p-6">
-                                <div className="flex items-center justify-between mb-4">
+                            <div className="bg-gray-700/30 rounded-2xl p-3 mb-4">
+                                <div className="flex items-center justify-between">
                                     <span className="text-gray-400">Current Price</span>
                                     <div className="flex items-center space-x-2">
                                         <Wallet className="w-5 h-5 text-cyan-400" />
                                         <span className="text-2xl font-black text-white">
                                             {selectedNFT.AskPrice / LAMPORTS_PER_SOL} SOL
                                         </span>
+                                        <div className="text-sm text-gray-400">
+                                            ≈ ${(Number(selectedNFT.AskPrice / LAMPORTS_PER_SOL) * usdPrice).toFixed(2)} USD
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="text-sm text-gray-400">
-                                    ≈ ${(Number(selectedNFT.AskPrice / LAMPORTS_PER_SOL) * 180).toFixed(2)} USD
                                 </div>
                             </div>
 
@@ -122,7 +128,7 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => confirmPurchase(selectedNFT)}
                                 disabled={purchaseStatus === 'processing'}
-                                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                                 {purchaseStatus === 'processing' ? (
                                     <>

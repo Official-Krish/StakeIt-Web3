@@ -43,7 +43,7 @@ export default function Hero() {
                     className="text-center mb-12"
                 >
                     <h1 className="text-6xl font-black text-white mb-6">
-                        NFT <span className="text-pink-400">Marketplace</span>
+                        NFT <span className="text-pink-400">Gallery</span>
                     </h1>
                     <p className="text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
                         Transform your earned points into exclusive digital masterpieces

@@ -13,6 +13,7 @@ export async function TradeNft(seller: PublicKey, id: number, BuyerWallet: Ancho
                 .accounts({
                     admin: ADMIN_PUBLIC_KEY,
                     seller: seller,
+                    buyer: BuyerWallet.publicKey,
                 })
                 .rpc();
 

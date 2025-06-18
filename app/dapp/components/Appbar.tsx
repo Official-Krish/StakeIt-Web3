@@ -52,7 +52,7 @@ export default function Appbar() {
     useEffect(() => {
         if (isClient && connected) {
             document.cookie = 'walletConnected=true; path=/; SameSite=Lax';
-        } else if (isClient) {
+        } else if (isClient || !connected) {
             document.cookie = 'walletConnected=false; path=/; SameSite=Lax';
         }
     }, [connected, isClient]);
@@ -131,15 +131,15 @@ export default function Appbar() {
                         })}
                     </div>
 
-                    {isClient && (
-                        !connected ? (
-                            <WalletMultiButton className='rounded-2xl'>
-                                <WalletIcon className="h-8 w-8 text-white"/>
-                            </WalletMultiButton>
-                        ) : (
-                            <DropDown/>
-                        )
-                    )}
+                    {isClient && 
+                      !connected ? (
+                          <WalletMultiButton className='rounded-2xl'>
+                              <WalletIcon className="h-8 w-8 text-white"/>
+                          </WalletMultiButton>
+                      ) : (
+                          <DropDown/>
+                      )
+                    }
                 </div>
             </div>
         </motion.nav>
@@ -173,7 +173,7 @@ export const DropDown = () => {
         <DropdownMenu>
           <DropdownMenuTrigger className="flex shadow-lg text-white cursor-pointer">
             <Image 
-              src={wallet?.adapter.icon || ""}
+              src={wallet?.adapter.icon || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2uLl8zBoK0_iM5pNwJAC8hQ2f68YKtlgc7Q&s"}
               alt="Avatar"
               width={30}
               height={30}

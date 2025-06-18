@@ -7,7 +7,6 @@ import {
   Grid, 
   List, 
   Calendar,
-  Eye,
   Share2,
   Tag,
   X,
@@ -27,21 +26,30 @@ export default function MyNFTs() {
     const wallet = useAnchorWallet();
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'rarity' | 'name'>('newest');
     const [selectedNFT, setSelectedNFT] = useState<OwnedNFT | null>(null);
     const [showSellModal, setShowSellModal] = useState(false);
     const [sellPrice, setSellPrice] = useState('');
     const [sellStatus, setSellStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
-    const categories = ['all', 'genesis', 'abstract', 'nature', 'futuristic', 'mythical', 'animals', 'space'];
+    const categories = ['All', 'Genesis', 'Animals', 'Abstract', 'Futuristic', 'Nature', 'Space', 'Mythical'];
     const [nfts, setNfts] = useState<OwnedNFT[]>([]);
     const [getNfts, setGetNfts] = useState<boolean>(false);
+    const [usdPrice, setUsdPrice] = useState<number>(0);
 
     useEffect (() => {
       if (!wallet?.publicKey || getNfts) return;
       getData();
       setGetNfts(true);
     }, [wallet?.publicKey]);
+
+    useEffect(() => {
+      const getPrice = async () => {
+          const res = await axios.get("https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112")
+          setUsdPrice(Number(res.data.data.So11111111111111111111111111111111111111112.price));
+      }
+      getPrice();
+  }, [])
 
     async function getData() {
       try {
@@ -60,7 +68,7 @@ export default function MyNFTs() {
       .filter(nft => {
         const matchesSearch = nft.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             nft.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory === 'all' || nft.category === selectedCategory;
+        const matchesCategory = selectedCategory === 'All' || nft.category === selectedCategory;
         return matchesSearch && matchesCategory;
       })
       .sort((a, b) => {
@@ -84,7 +92,20 @@ export default function MyNFTs() {
     };
 
     const confirmSell = async () => {
-      if (!selectedNFT || !sellPrice) return;      
+      if (!selectedNFT || !sellPrice) return;
+      if(selectedNFT.Listed){
+        toast.error('This feature will be added in upcoming version.', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "dark",
+        });
+        return;
+      }     
       setSellStatus('processing');
       ListNft(wallet!, Number(sellPrice) * 1000000000, Number(selectedNFT.id))
       const res = await axios.post('/api/nft/listNft', {
@@ -177,14 +198,14 @@ export default function MyNFTs() {
                   </div>
 
                   {/* Filters */}
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-4 cursor-pointer">
                     <select
                       value={selectedCategory}
                       onChange={(e) => setSelectedCategory(e.target.value)}
-                      className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
                     >
                       {categories.map(category => (
-                        <option key={category} value={category} className="capitalize">
+                        <option key={category} value={category} className="capitalize cursor-pointer">
                           {category}
                         </option>
                       ))}
@@ -193,7 +214,7 @@ export default function MyNFTs() {
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as any)}
-                      className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="bg-gray-700/50 border border-gray-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 cursor-pointer"
                     >
                       <option value="newest">Newest First</option>
                       <option value="oldest">Oldest First</option>
@@ -206,7 +227,7 @@ export default function MyNFTs() {
                   <div className="flex items-center space-x-2 bg-gray-700/30 rounded-xl p-1">
                     <button
                       onClick={() => setViewMode('grid')}
-                      className={`p-3 rounded-lg transition-all ${
+                      className={`p-3 rounded-lg transition-all cursor-pointer ${
                         viewMode === 'grid'
                           ? 'bg-green-600 text-white'
                           : 'text-gray-400 hover:text-white'
@@ -216,7 +237,7 @@ export default function MyNFTs() {
                     </button>
                     <button
                       onClick={() => setViewMode('list')}
-                      className={`p-3 rounded-lg transition-all ${
+                      className={`p-3 rounded-lg transition-all cursor-pointer ${
                         viewMode === 'list'
                           ? 'bg-green-600 text-white'
                           : 'text-gray-400 hover:text-white'
@@ -254,50 +275,45 @@ export default function MyNFTs() {
                       }`}
                     >
                       {/* NFT Image */}
-                      <div className={`relative ${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : ''}`}>
-                        <img
-                          src={nft.uri}
-                          alt={nft.name}
-                          className={`object-cover ${
-                            viewMode === 'list' 
-                              ? 'w-full h-full rounded-2xl' 
-                              : 'w-full h-64'
-                          }`}
-                        />
+                        <div className={`relative ${viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : ''}`}>
+                          <img
+                            src={nft.uri}
+                            alt={nft.name}
+                            className={`object-cover ${
+                              viewMode === 'list' 
+                                ? 'w-full h-full rounded-2xl' 
+                                : 'w-full h-64'
+                            }`}
+                          />
 
-                        {/* Listed Badge */}
-                        {nft.Listed && (
-                          <div className="absolute top-3 left-3 bg-green-600 text-white px-3 py-1 rounded-xl text-sm font-bold flex items-center space-x-1">
-                            <Tag className="w-4 h-4" />
-                            <span>LISTED</span>
+                          {/* Listed Badge */}
+                          {nft.Listed && (
+                            <div className="absolute top-3 left-3 bg-green-600 text-white px-3 py-1 rounded-xl text-sm font-bold flex items-center space-x-1">
+                              <Tag className="w-4 h-4" />
+                              <span>LISTED</span>
+                            </div>
+                          )}
+
+                          {/* Hover Actions */}
+                          {viewMode === 'grid' && (
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                            >
+                              <Share2 className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.1 }}
+                              whileTap={{ scale: 0.9 }}
+                              onClick={() => handleSell(nft)}
+                              className="w-12 h-12 bg-green-600/80 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-green-600 transition-colors"
+                            >
+                              <Tag className="w-5 h-5" />
+                            </motion.button>
                           </div>
                         )}
-
-                        {/* Hover Actions */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center space-x-3">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-white/30 transition-colors"
-                          >
-                            <Share2 className="w-5 h-5" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleSell(nft)}
-                            className="w-12 h-12 bg-green-600/80 backdrop-blur-sm rounded-xl flex items-center justify-center text-white hover:bg-green-600 transition-colors"
-                          >
-                            <Tag className="w-5 h-5" />
-                          </motion.button>
-                        </div>
                       </div>
 
                       {/* NFT Info */}
@@ -324,7 +340,7 @@ export default function MyNFTs() {
                             </div>
 
                             <div className="flex items-center justify-between mb-4">
-                              {nft.lastSalePrice != "You are the first buyer" && (
+                              {Number(nft.lastSalePrice) > 0  ? (
                                 <div className="text-right">
                                   <div className="text-xs text-gray-400">Last Sale</div>
                                   <div className="text-lg font-bold text-white flex items-center space-x-1">
@@ -332,8 +348,7 @@ export default function MyNFTs() {
                                     <span>{nft.lastSalePrice} SOL</span>
                                   </div>
                                 </div>
-                              )}
-                              {nft.lastSalePrice === "You are the first buyer" && (
+                              ) : (
                                 <div className="text-right">
                                   <div className="text-xs text-gray-400">Base Price</div>
                                   <div className="text-lg font-bold text-white flex items-center space-x-1">
@@ -345,7 +360,7 @@ export default function MyNFTs() {
                             </div>
 
                             {nft.Listed && nft.AskPrice && (
-                              <div className="bg-green-900/20 border border-green-700/30 rounded-xl p-3">
+                              <div className="bg-green-900/20 border border-green-700/30 rounded-xl p-3 mb-4">
                                 <div className="text-green-400 text-sm font-medium mb-1">Listed Price</div>
                                 <div className="text-xl font-black text-white flex items-center space-x-2">
                                   <Wallet className="w-5 h-5 text-green-400" />
@@ -360,7 +375,8 @@ export default function MyNFTs() {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
                               onClick={() => handleSell(nft)}
-                              className="ml-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold flex items-center space-x-2"
+                              className={`ml-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold flex items-center space-x-2 cursor-pointer ${nft.Listed ? 'opacity-50 cursor-not-allowed' : ''} `}
+                              disabled={nft.Listed}
                             >
                               <Tag className="w-5 h-5" />
                               <span>{nft.Listed ? 'Listed' : 'List for Sale'}</span>
@@ -374,7 +390,7 @@ export default function MyNFTs() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleSell(nft)}
                             disabled={nft.Listed}
-                            className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2"
+                            className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 ${nft.Listed ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <Tag className="w-5 h-5" />
                             <span>{nft.Listed ? 'Listed' : 'List for Sale'}</span>
@@ -441,7 +457,7 @@ export default function MyNFTs() {
                   </h2>
                   <button
                     onClick={() => setShowSellModal(false)}
-                    className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                    className="w-10 h-10 bg-gray-700 hover:bg-gray-600 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -478,7 +494,7 @@ export default function MyNFTs() {
                             <span className="text-green-400 font-bold">Currently Listed</span>
                           </div>
                           <div className="text-2xl font-black text-white">
-                            {selectedNFT.AskPrice} SOL
+                            {Number(selectedNFT.AskPrice) / LAMPORTS_PER_SOL} SOL
                           </div>
                         </div>
                       )}
@@ -496,7 +512,7 @@ export default function MyNFTs() {
                             </div>
                           </div>
                           <div className="text-sm text-gray-400">
-                            ≈ ${(Number(selectedNFT.lastSalePrice) * 180).toFixed(2)} USD
+                            ≈ ${(Number(selectedNFT.lastSalePrice) * usdPrice)} USD
                           </div>
                         </div>
                       )}
@@ -522,7 +538,7 @@ export default function MyNFTs() {
                         </div>
                         {sellPrice && (
                           <div className="text-sm text-gray-400">
-                            ≈ ${(parseFloat(sellPrice) * 180).toFixed(2)} USD
+                            ≈ ${(parseFloat(sellPrice) * usdPrice)} USD
                           </div>
                         )}
                       </div>
@@ -552,8 +568,8 @@ export default function MyNFTs() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={confirmSell}
-                        disabled={!sellPrice || parseFloat(sellPrice) <= 0 || sellStatus === 'processing'}
-                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!sellPrice && parseFloat(sellPrice) <= 0 && sellStatus === 'processing'}
+                        className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         {sellStatus === 'processing' ? (
                           <>
@@ -578,7 +594,7 @@ export default function MyNFTs() {
                           <>
                             <Tag className="w-5 h-5" />
                             <span>
-                              {selectedNFT.Listed ? 'Update Listing' : `List for ${sellPrice || '0'} SOL`}
+                              {selectedNFT.Listed ? 'Update Price' : `List for ${sellPrice || '0'} SOL`}
                             </span>
                           </>
                         )}
