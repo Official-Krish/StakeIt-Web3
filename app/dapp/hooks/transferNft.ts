@@ -1,29 +1,25 @@
 import { AnchorWallet } from "@solana/wallet-adapter-react";
-import { useNftContract } from "./contract";
-import { BN } from "bn.js";
 import { PublicKey } from "@solana/web3.js";
+import { useNftContract } from "./contract";
 import { ADMIN_PUBLIC_KEY } from "@/config";
+import BN from "bn.js";
 
-export async function TradeNft(seller: PublicKey, id: number, BuyerWallet: AnchorWallet ) {
+export async function TradeNft(seller: PublicKey, id: string, BuyerWallet: AnchorWallet) {
     const program = useNftContract(BuyerWallet);
 
     try {
         const tx = await program.methods
-                .buyNftWithSol(new BN(id))
-                .accounts({
-                    admin: ADMIN_PUBLIC_KEY,
-                    seller: seller,
-                    buyer: BuyerWallet.publicKey,
-                })
-                .rpc();
+            .buyNftWithSol(new BN(id))
+            .accounts({
+                admin: new PublicKey(ADMIN_PUBLIC_KEY),
+                seller: seller,
+                buyer: BuyerWallet.publicKey,
+            })
+            .rpc();
 
-        return {
-            success: true,
-            signature: tx,
-            message: "Nft minted successfully"
-        };
+        return { success: true, tx };
     } catch (error) {
-        console.error("Minting error:", error);
+        console.error("Buy error:", error);
         throw error;
     }
-}   
+}

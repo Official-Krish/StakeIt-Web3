@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
         const { nftId, buyer, price } = await req.json();
         await prisma.nft.update({
             where: {
-                id: BigInt(nftId),
+                id: nftId,
             },
             data: {
                 Minted: true,

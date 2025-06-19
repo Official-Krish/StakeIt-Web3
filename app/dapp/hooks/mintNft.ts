@@ -2,7 +2,7 @@ import { AnchorWallet } from "@solana/wallet-adapter-react";
 import { useNftContract } from "./contract";
 import { BN } from "bn.js";
 
-export async function MintNft(wallet: AnchorWallet, id: number, name: string, symbol: string, uri: string, pointsPrice: number, basePrice: number) {
+export async function MintNft(wallet: AnchorWallet, id: string, name: string, symbol: string, uri: string, pointsPrice: number, basePrice: number) {
     const program = useNftContract(wallet);
     if (!wallet.publicKey) {
         throw new Error("Wallet not connected");

@@ -1,6 +1,6 @@
 "use client";
 import { motion, AnimatePresence } from 'framer-motion';
-import { Grid, Heart, List, Search, ShoppingBag, Wallet } from 'lucide-react';
+import { Grid, List, Search, ShoppingBag, Wallet } from 'lucide-react';
 import { MarketplaceNFT } from '@/types/nft';
 import { useEffect, useState } from 'react';
 import Image from 'next/image';

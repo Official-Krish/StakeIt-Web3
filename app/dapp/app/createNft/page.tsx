@@ -52,7 +52,7 @@ function CreateNft() {
             quantity: nftForm.quantity,
         })
 
-        if (res.status === 201) {
+        if (res.status === 200) {
             toast.success(
                 `NFT "${nftForm.name}" created successfully!`,
                 {

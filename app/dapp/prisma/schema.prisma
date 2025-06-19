@@ -8,7 +8,7 @@ datasource db {
 }
 
 model Nft {
-  id          String   @id @default(uuid())
+  id          String   @unique
   name        String
   description String?
   symbol      String?

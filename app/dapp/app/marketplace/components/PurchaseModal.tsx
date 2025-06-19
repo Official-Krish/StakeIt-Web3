@@ -41,7 +41,7 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
         setPurchaseStatus('processing');
         
         // Simulate purchase process
-        await TradeNft(new PublicKey(nft.Owner), Number(nft.id), wallet!);
+        await TradeNft(new PublicKey(nft.Owner), nft.id, wallet!);
         try {
             axios.post('/api/nft/purchaseNft', {
                 nftId: nft.id,

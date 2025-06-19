@@ -1,6 +1,12 @@
 import prisma from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 
+function generateUniqueU64(): bigint {
+    const timestamp = BigInt(Date.now()) << BigInt(16); 
+    const random = BigInt(Math.floor(Math.random() * 65535)); 
+    return timestamp | random; 
+}
+
 export async function POST(req: NextRequest) {
    try {
         const { name, description, uri, symbol, PointsCost, BasePrice, category } = await req.json();
@@ -14,6 +20,7 @@ export async function POST(req: NextRequest) {
 
         await prisma.nft.create({
             data: {
+                id: String(generateUniqueU64()),
                 name,
                 description,
                 uri,
@@ -26,7 +33,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(
             { message: "NFT created successfully." },
-            { status: 201 }
+            { status: 200 }
         );
    } catch (error) {
         console.error("Error in POST /api/nft/createNft:", error);

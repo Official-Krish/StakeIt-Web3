@@ -46,7 +46,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
         setMintingNftId(Number(nft.id)); 
         try {
             await useClaimPonits(wallet!, Number(nft.pointPrice))
-            await MintNft(wallet!, Number(nft.id), nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
+            await MintNft(wallet!, nft.id, nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
             const res = await axios.post('/api/nft/mintNft', {
                 id: nft.id,
                 publicKey: wallet?.publicKey?.toBase58(),
@@ -115,7 +115,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                     const isMinting = mintingNftId === Number(nft.id); 
                     return (
                         <motion.div
-                            key={nft.id}
+                            key={Number(nft.id)}
                             layout
                             initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}

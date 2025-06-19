@@ -107,7 +107,7 @@ export default function MyNFTs() {
         return;
       }     
       setSellStatus('processing');
-      ListNft(wallet!, Number(sellPrice) * 1000000000, Number(selectedNFT.id))
+      ListNft(wallet!, Number(sellPrice) * 1000000000, selectedNFT.id)
       const res = await axios.post('/api/nft/listNft', {
         Owner: wallet?.publicKey?.toBase58(),
         NftId: selectedNFT.id,
@@ -390,7 +390,7 @@ export default function MyNFTs() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleSell(nft)}
                             disabled={nft.Listed}
-                            className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 ${nft.Listed ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 cursor-pointer ${nft.Listed ? 'opacity-50 cursor-not-allowed' : ''}`}
                           >
                             <Tag className="w-5 h-5" />
                             <span>{nft.Listed ? 'Listed' : 'List for Sale'}</span>
