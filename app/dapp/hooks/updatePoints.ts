@@ -1,4 +1,3 @@
-import { BN } from "@coral-xyz/anchor";
 import { useContract } from "./contract";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 

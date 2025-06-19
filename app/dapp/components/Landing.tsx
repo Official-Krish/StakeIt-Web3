@@ -2,7 +2,7 @@ import { Stats } from './Stats';
 import { Features } from './Features';
 import { Testimonials } from './Testimonials';
 import { CTA } from './CTA';
-import { Hero } from './hero';
+import { Hero } from './Hero';
 
 export default function LandingPage () {
 

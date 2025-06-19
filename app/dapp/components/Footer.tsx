@@ -162,7 +162,7 @@ export default function Footer() {
                                             className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-lg"
                                         >
                                             <Image
-                                                src={`/logo.jpeg`}
+                                                src={`/Logo2.png`}
                                                 alt="StakeIT Logo"
                                                 width={48}
                                                 height={48}

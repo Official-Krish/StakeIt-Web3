@@ -7,7 +7,6 @@ import { getPdaAccountData } from "@/hooks/getPdaAccountData";
 import { useEffect, useState } from "react";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { CreatePda } from "@/hooks/useCreatePda";
-import { UpdatePoints } from "@/hooks/updatePoints";
 
 export function Hero () {
     const wallet = useAnchorWallet();
@@ -69,7 +68,6 @@ export function Hero () {
 
     async function getData() {
         try {
-            await UpdatePoints(wallet!);
             const data = await getPdaAccountData(wallet!);
             setTotalPoints(Number(data.totalPoints)); 
             setStakedAmount(Number(data.stakedAmount) / 1e9);
@@ -83,7 +81,7 @@ export function Hero () {
         stakedSol: stakedAmount,
         availablePoints: totalPoints, 
     }
-    const pointsPerSecond = user.stakedSol * 0.01;
+    
     const dailyEarnings = user.stakedSol * 864;
     const apy = user.stakedSol > 0 ? (((dailyEarnings * 365) / user.stakedSol) * 100) / 10000000 : 0;
     

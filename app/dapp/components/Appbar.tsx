@@ -1,8 +1,14 @@
 "use client"
+import dynamic from 'next/dynamic';
+
+const WalletMultiButtonDynamic = dynamic(
+  () => import('@solana/wallet-adapter-react-ui').then((mod) => mod.WalletMultiButton),
+  { ssr: false }
+);
+
 import { useWallet } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { motion } from 'framer-motion';
-import { Coins, Image as ImageIcon, Home, Zap, WalletIcon, ShoppingBag } from 'lucide-react';
+import { Image as ImageIcon, Home, Zap, WalletIcon, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -71,7 +77,7 @@ export default function Appbar() {
                             className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-2xl flex items-center justify-center shadow-lg"
                         >
                             <Image
-                                src={`/logo.jpeg`}
+                                src={`/Logo2.png`}
                                 alt="StakeIT Logo"
                                 width={48}
                                 height={48}
@@ -139,9 +145,9 @@ export default function Appbar() {
 
                     { 
                       !connected ? (
-                          <WalletMultiButton className='rounded-2xl'>
+                            <WalletMultiButtonDynamic className='rounded-2xl'>
                               <WalletIcon className="h-8 w-8 text-white"/>
-                          </WalletMultiButton>
+                            </WalletMultiButtonDynamic>
                       ) : (
                           <DropDown/>
                       )

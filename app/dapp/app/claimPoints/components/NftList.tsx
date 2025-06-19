@@ -12,11 +12,11 @@ import { toast } from "react-toastify";
 import { nfts } from "@/types/nft";
 
 export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm: string, selectedCategory: string, viewMode: string } ) => {
-    const [showMintAnimation, setShowMintAnimation] = useState<boolean>(false);
     const wallet  = useAnchorWallet();
     const [points, setPoints] = useState<number>(0);
     const [nfts, setNfts] = useState<nfts[]>([]);
     const [getNfts, setGetNfts] = useState<boolean>(false);
+    const [mintingNftId, setMintingNftId] = useState<number | null>(null);
 
     useEffect (() => {
         if (!wallet?.publicKey || getNfts) return;
@@ -35,7 +35,6 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
         }
     }
 
-    
     const filteredNFTs = nfts.filter(nft => {
         const matchesCategory = selectedCategory === 'all' || nft.category === selectedCategory;
         const matchesSearch = nft.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -44,30 +43,48 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
     });
 
     const handleMint = async (nft: nfts) => {
-        setShowMintAnimation(true);
-        await useClaimPonits(wallet!, Number(nft.pointPrice))
-        await MintNft(wallet!, Number(nft.id), nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
-        const res = await axios.post('/api/nft/mintNft', {
-            id: nft.id,
-            publicKey: wallet?.publicKey?.toBase58(),
-        });
-        if (res.status === 200) {
-            toast.success(
-                `NFT Minted successfully!`,
-                {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,     
-                    draggable: true,
-                    progress: undefined,    
-                    theme: "dark",
-                }
-            );
-        } else {
+        setMintingNftId(Number(nft.id)); 
+        try {
+            await useClaimPonits(wallet!, Number(nft.pointPrice))
+            await MintNft(wallet!, Number(nft.id), nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
+            const res = await axios.post('/api/nft/mintNft', {
+                id: nft.id,
+                publicKey: wallet?.publicKey?.toBase58(),
+            });
+            
+            if (res.status === 200) {
+                toast.success(
+                    `NFT Minted successfully!`,
+                    {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,     
+                        draggable: true,
+                        progress: undefined,    
+                        theme: "dark",
+                    }
+                );
+            } else {
+                toast.error(
+                    `Error minting NFT: ${res.data}`,
+                    {
+                        position: "top-right",
+                        autoClose: 5000,
+                        hideProgressBar: false,
+                        closeOnClick: true,
+                        pauseOnHover: true,     
+                        draggable: true,
+                        progress: undefined,    
+                        theme: "dark",
+                    }
+                );
+            }
+        } catch (error) {
+            console.error("Minting error:", error);
             toast.error(
-                `Error minting NFT: ${res.data}`,
+                `Error minting NFT`,
                 {
                     position: "top-right",
                     autoClose: 5000,
@@ -79,8 +96,9 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                     theme: "dark",
                 }
             );
+        } finally {
+            setMintingNftId(null); 
         }
-        setShowMintAnimation(false);
     };
 
     return (
@@ -94,7 +112,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
             <AnimatePresence>
                 {filteredNFTs.map((nft, index) => {
                     const canAfford = points >= Number(nft.pointPrice);
-                    console.log("NFT:", nft);
+                    const isMinting = mintingNftId === Number(nft.id); 
                     return (
                         <motion.div
                             key={nft.id}
@@ -150,9 +168,9 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        disabled={!canAfford && nft.Minted && nft.Owner === wallet?.publicKey.toBase58()}
+                                        disabled={!canAfford || nft.Minted || nft.Owner === wallet?.publicKey.toBase58() || isMinting}
                                         className={`${viewMode === 'list' ? 'ml-6' : 'w-full'} py-4 px-6 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all ${
-                                            canAfford && !nft.Minted && nft.Owner != wallet?.publicKey.toBase58()
+                                            canAfford && !nft.Minted && nft.Owner != wallet?.publicKey.toBase58() && !isMinting
                                             ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-lg cursor-pointer'
                                             : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                                         }`}
@@ -182,14 +200,14 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                                 </>
                                             )
                                         )}
-                                        {showMintAnimation && (
+                                        {isMinting && (
                                             <Sparkles className="animate-spin w-5 h-5" />
                                         )}
                                     </motion.button>
                                 </div>
                             </div>
                             <AnimatePresence>
-                                {showMintAnimation  && (
+                                {isMinting && (
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.5 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -197,15 +215,15 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                         className="absolute inset-0 bg-gradient-to-r from-pink-500/90 to-violet-400/90 flex items-center justify-center rounded-3xl"
                                     >
                                         <div className="text-center">
-                                        <motion.div
-                                            animate={{ rotate: 360 }}
-                                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                        >
-                                            <Sparkles className="w-16 h-16 text-white mx-auto mb-4" />
-                                        </motion.div>
-                                        <div className="text-white font-black text-2xl">
-                                            Minting NFT...
-                                        </div>
+                                            <motion.div
+                                                animate={{ rotate: 360 }}
+                                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                            >
+                                                <Sparkles className="w-16 h-16 text-white mx-auto mb-4" />
+                                            </motion.div>
+                                            <div className="text-white font-black text-2xl">
+                                                Minting NFT...
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}

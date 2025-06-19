@@ -17,7 +17,7 @@ export default function Hero() {
     async function getData() {
         try {
             const data = await getPdaAccountData(wallet!);
-            setPoints((data.totalPoints) / 1000); 
+            setPoints((data.totalPoints)); 
         } catch (error) {
             console.error("Data fetch error:", error);
         }
