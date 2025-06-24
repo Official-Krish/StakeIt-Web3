@@ -22,16 +22,15 @@ describe("NFT-contract", async () => {
     let tokenAccount: anchor.web3.PublicKey;
     let nftMetadataAccount: anchor.web3.PublicKey;
     let masterEditionAccount: anchor.web3.PublicKey;
-    let listingAccount: anchor.web3.PublicKey;
-    let id = 9999; // Example ID for the NFT
+    let id = 1147099856644; // Example ID for the NFT
     
     const MPL_TOKEN_METADATA_PROGRAM_ID = new anchor.web3.PublicKey(
         "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
     );
 
-    // Derive the mint PDA
+    // Derive the mint PDA - FIXED: Changed "nft_mint" to "mint" to match Rust code
     [mint] = anchor.web3.PublicKey.findProgramAddressSync(
-        [Buffer.from("nft_mint"), admin.publicKey.toBuffer(), new BN(id).toArrayLike(Buffer, "le", 8)],
+        [Buffer.from("mint"), admin.publicKey.toBuffer(), new BN(id).toArrayLike(Buffer, "le", 8)],
         program.programId
     );
 
@@ -69,7 +68,7 @@ describe("NFT-contract", async () => {
 
         const tx = await program.methods
         .createNft(
-            new BN(9999), 
+            new BN(id), 
             "Final Testing",
             "Final 4",
             "https://img.atom.com/story_images/visual_images/1706201190-Test_main.png?class=show",
@@ -92,20 +91,17 @@ describe("NFT-contract", async () => {
         console.log("Transaction signature:", tx);
     });
 
-    it("list nft for sale", async () => {
-        [listingAccount] = anchor.web3.PublicKey.findProgramAddressSync(
-            [Buffer.from("listing"), new BN(id).toArrayLike(Buffer, "le", 8)],
-            program.programId
-        );
+    it("list nft for sale", async () => { 
         const tx = await program.methods
-            .listNft(new anchor.BN(1.2 * anchor.web3.LAMPORTS_PER_SOL))
+            .listNft(new anchor.BN(1.2 * anchor.web3.LAMPORTS_PER_SOL), new BN(id))
             .accounts({
-                sellerTokenAccount: tokenAccount,
                 seller: admin.publicKey,
+                admin: admin.publicKey,
             })
             .signers([admin])
+            .rpc();
 
-        assert.ok(tx, "Transaction should be successful");
+        console.log("List NFT transaction signature:", tx);
     });
 
     it("Buy nft as user from SOL", async () => {
@@ -114,42 +110,18 @@ describe("NFT-contract", async () => {
             user.publicKey
         );
 
-        // Check balances before transaction
-        const buyerBalanceBefore = await program.provider.connection.getBalance(user.publicKey);
-        const sellerBalanceBefore = await program.provider.connection.getBalance(admin.publicKey);
-        
-        console.log("Buyer balance before:", buyerBalanceBefore / anchor.web3.LAMPORTS_PER_SOL, "SOL");
-        console.log("Seller balance before:", sellerBalanceBefore / anchor.web3.LAMPORTS_PER_SOL, "SOL");
-
-        // Ensure buyer has enough SOL (at least 2 SOL for the purchase + transaction fees)
-        const requiredAmount = 2 * anchor.web3.LAMPORTS_PER_SOL;
-        if (buyerBalanceBefore < requiredAmount) {
-            console.log("Funding buyer account...");
-            const airdropTx = await program.provider.connection.requestAirdrop(
-                user.publicKey,
-                requiredAmount
-            );
-            await program.provider.connection.confirmTransaction(airdropTx);
-        }
-
         try {
             const tx = await program.methods
                 .buyNftWithSol(new BN(id))
                 .accounts({
                     seller: admin.publicKey,
                     admin: admin.publicKey,
+                    buyer: user.publicKey,
                 })
                 .signers([user])
                 .rpc();
 
             console.log("Transaction signature:", tx);
-            
-            // Check balances after transaction
-            const buyerBalanceAfter = await program.provider.connection.getBalance(user.publicKey);
-            const sellerBalanceAfter = await program.provider.connection.getBalance(admin.publicKey);
-            
-            console.log("Buyer balance after:", buyerBalanceAfter / anchor.web3.LAMPORTS_PER_SOL, "SOL");
-            console.log("Seller balance after:", sellerBalanceAfter / anchor.web3.LAMPORTS_PER_SOL, "SOL");
             
             const userATA = await program.provider.connection.getAccountInfo(buyerTokenAccount);
             assert.ok(userATA !== null, "User token account should exist after buying NFT");

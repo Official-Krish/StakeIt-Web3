@@ -59,7 +59,6 @@ describe("staking-contract", () => {
     const tx = await program.methods.getPoints().accounts({
       user: user.publicKey,
     })
-    .signers([user])
     .rpc();
     const account = await program.account.stakeAccount.fetch(pdaAccount);
     console.log("Points:", account.totalPoints.toString());
