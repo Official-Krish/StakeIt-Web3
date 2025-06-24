@@ -1,6 +1,8 @@
 import { BN } from "@coral-xyz/anchor";
 import { useContract } from "./contract";
 import { AnchorWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { ADMIN_PUBLIC_KEY } from "@/config";
 
 
 export async function unStakeTokens(wallet: AnchorWallet, amount: number) {
@@ -17,6 +19,7 @@ export async function unStakeTokens(wallet: AnchorWallet, amount: number) {
                 .unstake(new BN(UnStakeAmount))
                 .accounts({
                     user: wallet.publicKey,
+                    admin: new PublicKey(ADMIN_PUBLIC_KEY)
                 })
                 .rpc(); 
 

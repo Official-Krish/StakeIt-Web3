@@ -13,12 +13,13 @@ nft_contract = "7mEjdqGfFBtH3T6qWHBxTLwq2PoaYjZjr4zF2w8kZ5FY"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "https://api.devnet.solana.com"
+cluster = "http://127.0.0.1:8899"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 test-nft = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/nft-contract.ts"
+test-staking= "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/staking-contract.ts"
 
 [workspace]
 members = [
