@@ -7,6 +7,7 @@ declare_id!("BoN2bzEWpqnFcugMCzPec63EDyGA7LHLSMySdMJxiY7x");
 const POINTS_PER_SOL_PER_DAY: u64 = 864; 
 const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
 const SECONDS_PER_DAY: u64 = 86_400;
+const PRECISION_FACTOR: u128 = 1_000_000; 
 
 #[program]
 pub mod staking_contract {
@@ -138,21 +139,41 @@ fn update_points(pda_account: &mut StakeAccount, current_timestamp: i64) -> Resu
 }
 
 fn calculate_points(staked_amount: u64, time_elapsed: i64) -> Result<u64> {
-    // Points = (staked_amount_in_sol * time_in_seconds * points_per_sol_per_second)
     // Rate: 864 points per SOL per day = 0.01 points per SOL per second
-    // Calculate points with precision
-    // Formula: (staked_lamports * time_seconds * points_per_sol_per_day) / (lamports_per_sol * seconds_per_day)
-    let points = (staked_amount as u128)
-        .checked_mul(time_elapsed as u128)
+    if staked_amount == 0 || time_elapsed <= 0 {
+        return Ok(0);
+    }
+
+    // Formula: (staked_lamports * time_seconds * points_per_sol_per_day * PRECISION_FACTOR) / (lamports_per_sol * seconds_per_day)
+    
+    let staked_amount_u128 = staked_amount as u128;
+    let time_elapsed_u128 = time_elapsed as u128;
+    
+    let numerator = staked_amount_u128
+        .checked_mul(time_elapsed_u128)
         .ok_or(StakeError::Overflow)?
         .checked_mul(POINTS_PER_SOL_PER_DAY as u128)
         .ok_or(StakeError::Overflow)?
-        .checked_div(LAMPORTS_PER_SOL as u128)
-        .ok_or(StakeError::Overflow)?
-        .checked_div(SECONDS_PER_DAY as u128)
+        .checked_mul(PRECISION_FACTOR)
+        .ok_or(StakeError::Overflow)?;
+    
+    let denominator = (LAMPORTS_PER_SOL as u128)
+        .checked_mul(SECONDS_PER_DAY as u128)
+        .ok_or(StakeError::Overflow)?;
+    
+    let points_with_precision = numerator
+        .checked_div(denominator)
+        .ok_or(StakeError::Overflow)?;
+    
+    // Remove precision factor
+    let final_points = points_with_precision
+        .checked_div(PRECISION_FACTOR)
         .ok_or(StakeError::Overflow)?;
 
-    Ok(points as u64)
+    msg!("Points calculation: staked={}, time={}, points={}", 
+         staked_amount, time_elapsed, final_points);
+    
+    Ok(final_points as u64)
 }
 
 #[derive(Accounts)]
