@@ -5,7 +5,7 @@ import { UnstakeTokens } from "@/hooks/Staking";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
 import { AnimatePresence, motion } from "framer-motion";
-import { Gift, Wallet, Zap } from "lucide-react";
+import { Gift, Loader2, Wallet, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
@@ -35,7 +35,8 @@ export default function Staking () {
     if (!wallet) {
         return (
             <div className="text-center text-gray-400">
-                <p>Please connect your wallet to stake or unstake SOL.</p>
+                <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+                <h2 className="text-2xl font-bold mb-2">Connecting...</h2>
             </div>
         );
     }
@@ -224,9 +225,11 @@ export default function Staking () {
                                 </h4>
                                 <ul className="text-gray-300 space-y-2">
                                     <li>• Earn 0.1 points per SOL per second</li>
+                                    <li>• Earn 7% apy on staked SOL</li>
                                     <li>• No minimum staking period</li>
                                     <li>• Compound your rewards automatically</li>
                                     <li>• Access to exclusive NFT drops</li>
+                                    <li>• Accumulated Rewards will be transferred to your account when you unstake.</li>
                                 </ul>
                             </div>
                         </motion.div>

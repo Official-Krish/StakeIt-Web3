@@ -14,6 +14,7 @@ export function Hero () {
     const [stakedAmount, setStakedAmount] = useState(0);
     const [initialLoad, setInitialLoad] = useState(true); 
     const [pdaCreated, setPdaCreated] = useState(false);
+    const [accruedrReward, setAccruedReward] = useState(0);
 
     // Only run once on wallet connection
     useEffect(() => {
@@ -70,6 +71,7 @@ export function Hero () {
             const data = await getPdaAccountData(wallet!);
             setTotalPoints(Number(data.totalPoints)); 
             setStakedAmount(Number(data.stakedAmount) / 1e9);
+            setAccruedReward(Number(data.accruedReward) / 1e9);
         } catch (error) {
             console.error("Data fetch error:", error);
         }
@@ -79,10 +81,11 @@ export function Hero () {
     const user = {
         stakedSol: stakedAmount,
         availablePoints: totalPoints, 
+        accruedrReward: accruedrReward
     }
     
     const dailyEarnings = user.stakedSol * 864;
-    const apy = user.stakedSol > 0 ? (((dailyEarnings * 365) / user.stakedSol) * 100) / 10000000 : 0;
+    const apy = "7";
     
     return (
         <div className="mt-6">
@@ -134,15 +137,15 @@ export function Hero () {
                         bgColor: 'from-green-600/20 to-emerald-600/20',
                     },
                     {
-                        label: 'Daily Earnings',
-                        value: `${Math.floor(dailyEarnings).toLocaleString()} pts`,
+                        label: 'Accumulated Rewards',
+                        value: `${Math.floor(user.accruedrReward).toLocaleString()} SOL`,
                         icon: TrendingUp,
                         color: 'from-orange-500 to-yellow-400',
                         bgColor: 'from-orange-600/20 to-yellow-600/20',
                     },
                     {
                         label: 'Current APY',
-                        value: `${apy.toFixed(1)}%`,
+                        value: `${apy}%`,
                         icon: BarChart3,
                         color: 'from-violet-500 to-pink-400',
                         bgColor: 'from-violet-600/20 to-pink-600/20',
