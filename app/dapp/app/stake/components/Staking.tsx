@@ -1,7 +1,7 @@
 "use client"
-import { getPdaAccountData } from "@/hooks/getPdaAccountData";
-import { StakeSol } from "@/hooks/useStaking";
-import { unStakeTokens } from "@/hooks/useUnstaking";
+import { getPdaAccountData } from "@/hooks/Staking";
+import { StakeSol } from "@/hooks/Staking";
+import { UnstakeTokens } from "@/hooks/Staking";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
 import { AnimatePresence, motion } from "framer-motion";
@@ -96,7 +96,7 @@ export default function Staking () {
     };
 
     const handleUnstake = async () => {
-        const res = await unStakeTokens(wallet, parseFloat(unstakeAmount))
+        const res = await UnstakeTokens(wallet, parseFloat(unstakeAmount))
         if (res.success) {
             toast.success(
                 `Successfully unstaked ${unstakeAmount} SOL!`,

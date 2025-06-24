@@ -1,5 +1,5 @@
 "use client";
-import { TradeNft } from "@/hooks/transferNft";
+import { TradeNft } from "@/hooks/Nft-Contract";
 import { MarketplaceNFT } from "@/types/nft";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";

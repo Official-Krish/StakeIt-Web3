@@ -4,10 +4,10 @@ import { Coins, Crown, Gem, Sparkles, Star, Image as ImageIcon } from "lucide-re
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { getPdaAccountData } from "@/hooks/getPdaAccountData";
+import { getPdaAccountData } from "../../../hooks/Staking";
 import axios from "axios";
-import { useClaimPonits } from "@/hooks/useClaimPoints";
-import { MintNft } from "@/hooks/mintNft";
+import { ClaimPonits } from "@/hooks/Staking";
+import { MintNft } from "@/hooks/Nft-Contract";
 import { toast } from "react-toastify";
 import { nfts } from "@/types/nft";
 
@@ -45,7 +45,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
     const handleMint = async (nft: nfts) => {
         setMintingNftId(Number(nft.id)); 
         try {
-            await useClaimPonits(wallet!, Number(nft.pointPrice))
+            await ClaimPonits(wallet!, Number(nft.pointPrice))
             await MintNft(wallet!, nft.id, nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
             const res = await axios.post('/api/nft/mintNft', {
                 id: nft.id,

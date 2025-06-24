@@ -6,7 +6,7 @@ import { AnchorWallet } from "@solana/wallet-adapter-react";
 
 const network = clusterApiUrl("devnet");
 
-export function useContract(wallet: AnchorWallet): Program {
+export function StakingContract(wallet: AnchorWallet): Program {
     if (!wallet) {
         throw new Error("Wallet not connected");
     }
@@ -18,7 +18,7 @@ export function useContract(wallet: AnchorWallet): Program {
     return program;
 }
 
-export function useNftContract(wallet: AnchorWallet): Program {
+export function NftContract(wallet: AnchorWallet): Program {
     if (!wallet) {
         throw new Error("Wallet not connected");
     }

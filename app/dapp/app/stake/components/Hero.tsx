@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { Wallet, Coins, TrendingUp, BarChart3 } from 'lucide-react';
 import AnimatedCounter from "./AnimatedCounter";
 import Image from "next/image";
-import { getPdaAccountData } from "@/hooks/getPdaAccountData";
+import { getPdaAccountData } from "@/hooks/Staking";
 import { useEffect, useState } from "react";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { CreatePda } from "@/hooks/useCreatePda";
+import { CreatePda } from "@/hooks/Staking";
 
 export function Hero () {
     const wallet = useAnchorWallet();

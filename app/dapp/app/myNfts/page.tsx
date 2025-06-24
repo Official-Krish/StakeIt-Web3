@@ -18,7 +18,7 @@ import { OwnedNFT } from '@/types/nft';
 import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import axios from 'axios';
 import Image from 'next/image';
-import { ListNft } from '@/hooks/listNft';
+import { ListNft } from '@/hooks/Nft-Contract';
 import { toast } from 'react-toastify';
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 

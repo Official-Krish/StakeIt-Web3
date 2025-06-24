@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Coins } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { getPdaAccountData } from "../../../hooks/getPdaAccountData";
+import { getPdaAccountData } from "../../../hooks/Staking";
 
 export default function Hero() {
     const wallet  = useAnchorWallet();
