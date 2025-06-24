@@ -34,7 +34,6 @@ export function Hero () {
                 setInitialLoad(false);
             }
         };
-
         initialize();
     }, [wallet?.publicKey]); 
 

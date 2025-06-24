@@ -9,20 +9,23 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { 
   Plus, 
-  Upload, 
+  Upload,
+  Vault,
+  Wallet, 
 } from "lucide-react";
 import { toast } from "react-toastify"
 import axios from "axios";
 import Image from "next/image";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAnchorWallet, useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/navigation";
 import { ADMIN_PUBLIC_KEY } from "@/config";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SelectItem } from "@radix-ui/react-select";
+import { AddFundsToVault, CreateVaultAccount } from "@/hooks/Staking";
 
 
-function CreateNft() {
-    const { wallet } = useWallet();
+function adminDashboard() {
+    const wallet  = useAnchorWallet();
     const [nfts, setNfts] = useState<[]>([]);
     const router = useRouter();
     const [category, setCategory] = useState("");
@@ -39,6 +42,62 @@ function CreateNft() {
         category: "",
         quantity: "",
     });
+
+    const [fundVaultForm, setFundVaultForm] = useState({
+        amount: "",
+    });
+
+    const handleCreateVault = async () => {
+        try {
+            await CreateVaultAccount(wallet!);
+            toast.success("Vault account created successfully!", {
+                position: "top-right",  
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+        } catch (error) {
+            console.error("Error creating vault:", error);
+            toast.error("An error occurred while creating the vault account.");
+        }
+    };
+
+    const handleFundVault = async () => {
+        if (!fundVaultForm.amount || isNaN(Number(fundVaultForm.amount)) || Number(fundVaultForm.amount) <= 0) {
+            toast.error("Please enter a valid amount to fund the vault.", {
+                position: "top-right",  
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+            return;
+        }
+        try {
+            AddFundsToVault(wallet!, Number(fundVaultForm.amount));
+            toast.success(`Vault funded with ${fundVaultForm.amount} SOL successfully!`, {
+                position: "top-right",  
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "dark",
+            });
+            setFundVaultForm({ amount: "" });
+        } catch (error) {
+            console.error("Error funding vault:", error);
+            toast.error("An error occurred while funding the vault account.");
+        }
+    };
 
     const handleCreateNFT = async () => {
         const res = await axios.post("/api/nft/createNft", {
@@ -85,27 +144,25 @@ function CreateNft() {
     const [fetched, setFetched] = useState(false);
 
     useEffect(() => {
-        if (!wallet?.adapter.connected || fetched) return;
+        if (!wallet || fetched) return;
 
-        const pubkey = wallet?.adapter.publicKey?.toString();
+        const pubkey = wallet?.publicKey?.toString();
         if (pubkey !== ADMIN_PUBLIC_KEY) {
             router.push("/");
             toast.error("You do not have permission to access this page.");
             return;
         }
 
-        console.log("fetching NFTs for admin:");
         getNfts();
         setFetched(true);
 
-    }, [wallet?.adapter.connected, wallet?.adapter.publicKey, fetched]);
+    }, [wallet, wallet?.publicKey, fetched]);
 
 
     const getNfts = async () => {
         try {
             const response = await axios.get("/api/nft/getNfts");
             setNfts(response.data);
-            console.log("Fetched NFTs:", response.data);
         } catch (error) {
             console.error("Error fetching NFTs:", error);
             toast.error("Failed to fetch NFTs");
@@ -128,6 +185,62 @@ function CreateNft() {
                     Manage your NFT collection, monitor platform statistics, and create new digital assets for your community.
                 </p>
                 </motion.div>
+
+                <div className="mb-10">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="space-y-6"
+                    >
+                        {/* Create Vault */}
+                        <Card className="bg-gray-900 backdrop-blur-lg border-border/50">
+                        <CardHeader>
+                            <CardTitle className="text-xl bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent flex items-center">
+                            <Vault className="w-5 h-5 mr-2 text-cyan-400" />
+                                Create Vault Account
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <Button 
+                                onClick={handleCreateVault}
+                                className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
+                            >
+                                Create Vault
+                            </Button>
+                        </CardContent>
+                        </Card>
+
+                        {/* Fund Vault */}
+                        <Card className="bg-gray-900 backdrop-blur-lg border-border/50">
+                        <CardHeader>
+                            <CardTitle className="text-xl bg-gradient-to-r from-orange-400 to-pink-400 bg-clip-text text-transparent flex items-center">
+                            <Wallet className="w-5 h-5 mr-2 text-orange-400" />
+                                Fund Vault Account
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                            <Label htmlFor="fundAmount">Amount (SOL) *</Label>
+                            <Input
+                                id="fundAmount"
+                                type="number"
+                                value={fundVaultForm.amount}
+                                onChange={(e) => setFundVaultForm({...fundVaultForm, amount: e.target.value})}
+                                placeholder="0.00"
+                                className="bg-background/50"
+                            />
+                            </div>
+                            <Button 
+                            onClick={handleFundVault}
+                            className="w-full bg-gradient-to-r from-orange-500 to-pink-500 hover:from-orange-600 hover:to-pink-600"
+                            >
+                            Add Funds
+                            </Button>
+                        </CardContent>
+                        </Card>
+                    </motion.div>
+                </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* NFT Creation Form */}
@@ -334,4 +447,4 @@ function CreateNft() {
     );
 };
 
-export default CreateNft;
+export default adminDashboard;

@@ -1,6 +1,6 @@
 "use client"
-import { getPdaAccountData } from "@/hooks/getPdaAccountData";
-import { UpdatePoints } from "@/hooks/updatePoints";
+import { getPdaAccountData } from "@/hooks/Staking";
+import { UpdatePoints } from "@/hooks/Staking";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { motion } from "framer-motion"
 import { Activity, Gift, RefreshCw, Target } from "lucide-react";

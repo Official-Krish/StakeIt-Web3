@@ -4,7 +4,7 @@ import idl from '../idl/staking_contract.json';
 import nftIdl from '../idl/nft_contract.json';
 import { AnchorWallet } from "@solana/wallet-adapter-react";
 
-const network = clusterApiUrl("devnet");
+const network = clusterApiUrl('devnet');
 
 export function StakingContract(wallet: AnchorWallet): Program {
     if (!wallet) {

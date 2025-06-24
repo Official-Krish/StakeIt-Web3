@@ -28,7 +28,7 @@ export default function Appbar() {
         { path: '/', label: 'Home', icon: Home },
         { path: '/stake', label: 'Stake', icon: Zap },
         { path: '/claimPoints', label: 'Claim Points', icon: ImageIcon },
-        { path: '/createNft', label: 'CreateNft', icon: ImageIcon }, 
+        { path: '/admin', label: 'Admin Dashboard', icon: ImageIcon }, 
         { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
         { path: '/myNfts', label: 'My Nfts', icon: ImageIcon },
     ];
