@@ -87,8 +87,6 @@ describe("NFT-contract", async () => {
         .rpc();
         
         const nft = await program.provider.connection.getAccountInfo(mint);
-        console.log("NFT Mint Account Data:", JSON.stringify(nft));
-        console.log("Transaction signature:", tx);
     });
 
     it("list nft for sale", async () => { 

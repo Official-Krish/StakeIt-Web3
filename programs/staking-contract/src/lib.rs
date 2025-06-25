@@ -211,7 +211,6 @@ fn calculate_points(staked_amount: u64, time_elapsed: i64) -> Result<u64> {
         .checked_div(denominator)
         .ok_or(StakeError::Overflow)?;
     
-    // Keep precision factor - don't divide it out here
     let final_points = points_with_precision as u64;
 
     msg!("Points calculation: staked={} lamports, time={} seconds, points_with_precision={}", 
@@ -248,7 +247,6 @@ fn calculate_reward(staked_amount: u64, time_elapsed: i64) -> Result<u64> {
     Ok(reward as u64) 
 }
 
-// Account structures remain the same
 #[derive(Accounts)]
 pub struct CreatePdaAccount <'info> {
     #[account(mut)]

@@ -6,14 +6,14 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-staking_contract = "BoN2bzEWpqnFcugMCzPec63EDyGA7LHLSMySdMJxiY7x"
+staking_contract = "EbbermosrWwxzWb3R4LmiXsXvdHV1JEkYr1e3mwDWjQv"
 nft_contract = "7mEjdqGfFBtH3T6qWHBxTLwq2PoaYjZjr4zF2w8kZ5FY"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "http://127.0.0.1:8899"
+cluster = "https://api.devnet.solana.com"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
