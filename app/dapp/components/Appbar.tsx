@@ -101,7 +101,7 @@ export default function Appbar() {
                               return;
                             }
 
-                            if((wallet?.adapter.publicKey?.toString() !=  ADMIN_PUBLIC_KEY) && (item.label === "CreateNft")) {
+                            if((wallet?.adapter.publicKey?.toString() !=  ADMIN_PUBLIC_KEY) && (item.label === "Admin Dashboard")) {
                                 return null;
                             }
                             

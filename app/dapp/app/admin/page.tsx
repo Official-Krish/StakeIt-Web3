@@ -22,6 +22,8 @@ import { ADMIN_PUBLIC_KEY } from "@/config";
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SelectItem } from "@radix-ui/react-select";
 import { AddFundsToVault, CreateVaultAccount } from "@/hooks/Staking";
+import { PublicKey } from "@solana/web3.js";
+import { StakingContract } from "@/hooks/contract";
 
 
 function adminDashboard() {
@@ -29,6 +31,7 @@ function adminDashboard() {
     const [nfts, setNfts] = useState<[]>([]);
     const router = useRouter();
     const [category, setCategory] = useState("");
+    const [vaultBalance, setVaultBalance] = useState(0);
 
     const categories = ['genesis', 'animals', 'abstract', 'futuristic', 'nature', 'space', 'mythical'];
     
@@ -47,24 +50,25 @@ function adminDashboard() {
         amount: "",
     });
 
-    const handleCreateVault = async () => {
-        try {
-            await CreateVaultAccount(wallet!);
-            toast.success("Vault account created successfully!", {
-                position: "top-right",  
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "dark",
-            });
-        } catch (error) {
-            console.error("Error creating vault:", error);
-            toast.error("An error occurred while creating the vault account.");
-        }
-    };
+
+    // const handleCreateVault = async () => {
+    //     try {
+    //         await CreateVaultAccount(wallet!);
+    //         toast.success("Vault account created successfully!", {
+    //             position: "top-right",  
+    //             autoClose: 5000,
+    //             hideProgressBar: false,
+    //             closeOnClick: true,
+    //             pauseOnHover: true,
+    //             draggable: true,
+    //             progress: undefined,
+    //             theme: "dark",
+    //         });
+    //     } catch (error) {
+    //         console.error("Error creating vault:", error);
+    //         toast.error("An error occurred while creating the vault account.");
+    //     }
+    // };
 
     const handleFundVault = async () => {
         if (!fundVaultForm.amount || isNaN(Number(fundVaultForm.amount)) || Number(fundVaultForm.amount) <= 0) {
@@ -154,6 +158,7 @@ function adminDashboard() {
         }
 
         getNfts();
+        getVaultAccount();
         setFetched(true);
 
     }, [wallet, wallet?.publicKey, fetched]);
@@ -166,6 +171,21 @@ function adminDashboard() {
         } catch (error) {
             console.error("Error fetching NFTs:", error);
             toast.error("Failed to fetch NFTs");
+        }
+    };
+
+    const getVaultAccount = async () => {
+        const program = StakingContract(wallet!);
+        try {
+            const [pda] = PublicKey.findProgramAddressSync(
+                [Buffer.from("vault_account"), new PublicKey(ADMIN_PUBLIC_KEY).toBuffer(), Buffer.from("vault")],
+                program.programId
+            );
+            const vaultBalance = await program.provider.connection.getBalance(pda);
+            setVaultBalance(vaultBalance / 1e9); 
+        } catch (error) {
+            console.error("Error fetching vault account:", error);
+            toast.error("Failed to fetch vault account.");
         }
     };
 
@@ -198,16 +218,23 @@ function adminDashboard() {
                         <CardHeader>
                             <CardTitle className="text-xl bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent flex items-center">
                             <Vault className="w-5 h-5 mr-2 text-cyan-400" />
-                                Create Vault Account
+                                Vault Management
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <Button 
-                                onClick={handleCreateVault}
-                                className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
+                            <div 
+                                className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 rounded-lg p-4"
                             >
-                                Create Vault
-                            </Button>
+                                {vaultBalance > 0 ? (
+                                    <div className="text-white">
+                                        Vault Balance: {vaultBalance.toFixed(2)} SOL 
+                                    </div>
+                                ) : (
+                                    <div className="text-red-500">
+                                        Vault is empty
+                                    </div>
+                                )}     
+                            </div>
                         </CardContent>
                         </Card>
 
@@ -221,14 +248,14 @@ function adminDashboard() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                            <Label htmlFor="fundAmount">Amount (SOL) *</Label>
+                            <Label htmlFor="fundAmount" className="text-white">Amount (SOL) *</Label>
                             <Input
                                 id="fundAmount"
                                 type="number"
                                 value={fundVaultForm.amount}
                                 onChange={(e) => setFundVaultForm({...fundVaultForm, amount: e.target.value})}
                                 placeholder="0.00"
-                                className="bg-background/50"
+                                className="bg-gray-800 text-white"
                             />
                             </div>
                             <Button 
