@@ -6,7 +6,6 @@ declare_id!("EbbermosrWwxzWb3R4LmiXsXvdHV1JEkYr1e3mwDWjQv");
 const POINTS_PER_SOL_PER_DAY: u64 = 864; 
 const LAMPORTS_PER_SOL: u64 = 1_000_000_000;
 const SECONDS_PER_DAY: u64 = 86_400;
-const PRECISION_FACTOR: u128 = 1_000_000; 
 
 #[program]
 pub mod staking_contract {
@@ -93,16 +92,13 @@ pub mod staking_contract {
         update_points_and_rewards(pda_account, clock.unix_timestamp)?;
         
         // Convert points to actual value (divide by precision factor)
-        let claimable_points = pda_account.total_points / PRECISION_FACTOR as u64;
+        let claimable_points = pda_account.total_points as u64;
         
         msg!("User has {} claimable points", claimable_points);
         require!(claimable_points >= amount as u64, StakeError::InsufficientPoints);
+    
         
-        // Subtract claimed points (convert amount back to precision)
-        let points_to_subtract = (amount as u128).checked_mul(PRECISION_FACTOR)
-            .ok_or(StakeError::Overflow)? as u64;
-        
-        pda_account.total_points = pda_account.total_points.checked_sub(points_to_subtract)
+        pda_account.total_points = pda_account.total_points.checked_sub(amount as u64)
             .ok_or(StakeError::Underflow)?;
         
         msg!("Claimed {} points successfully", amount);
@@ -127,7 +123,7 @@ pub mod staking_contract {
             .ok_or(StakeError::Overflow)?;
         
         // Display points without precision factor
-        let display_points = current_total_points / PRECISION_FACTOR as u64;
+        let display_points = current_total_points as u64;
         
         msg!("Current points: {}, Staked amount: {} SOL, Accrued rewards: {} lamports", 
              display_points,
@@ -179,7 +175,7 @@ fn update_points_and_rewards(pda_account: &mut StakeAccount, current_timestamp: 
             .ok_or(StakeError::Overflow)?;
 
         msg!("Updated - Points added: {}, Rewards added: {} lamports", 
-             new_points / PRECISION_FACTOR as u64, new_reward);
+             new_points as u64, new_reward);
     }
     
     pda_account.last_updated_timestamp = current_timestamp;
@@ -199,8 +195,6 @@ fn calculate_points(staked_amount: u64, time_elapsed: i64) -> Result<u64> {
         .checked_mul(time_elapsed_u128)
         .ok_or(StakeError::Overflow)?
         .checked_mul(POINTS_PER_SOL_PER_DAY as u128)
-        .ok_or(StakeError::Overflow)?
-        .checked_mul(PRECISION_FACTOR)
         .ok_or(StakeError::Overflow)?;
     
     let denominator = (LAMPORTS_PER_SOL as u128)
@@ -224,27 +218,22 @@ fn calculate_reward(staked_amount: u64, time_elapsed: i64) -> Result<u64> {
         return Ok(0);
     }
 
-    const ANNUAL_RATE_NUMERATOR: u128 = 7;  // 7% APY
-    const ANNUAL_RATE_DENOMINATOR: u128 = 100;
-    const SECONDS_PER_YEAR: u128 = 31_536_000; 
+    const ANNUAL_RATE: u64 = 7; 
+    
+    let staked_sol = staked_amount;
+    
+    let reward_sol = staked_sol * (ANNUAL_RATE / 100) * (time_elapsed as u64);
+    
+    let reward_lamports = (reward_sol) /  (SECONDS_PER_DAY * 365);
 
-    let time_elapsed = time_elapsed as u128;
-    let staked = staked_amount as u128;
+    msg!(
+        "Reward calculation: {} SOL over {} seconds = {} lamports",
+        staked_sol,
+        time_elapsed,
+        reward_lamports
+    );
 
-    let reward = staked
-        .checked_mul(ANNUAL_RATE_NUMERATOR)
-        .ok_or(StakeError::Overflow)?
-        .checked_mul(time_elapsed)
-        .ok_or(StakeError::Overflow)?
-        .checked_div(ANNUAL_RATE_DENOMINATOR)
-        .ok_or(StakeError::Overflow)?
-        .checked_div(SECONDS_PER_YEAR)
-        .ok_or(StakeError::Overflow)?;
-
-    msg!("Reward calculation: staked={} lamports, time={} seconds, reward={} lamports", 
-         staked_amount, time_elapsed, reward);
-
-    Ok(reward as u64) 
+    Ok(reward_lamports)
 }
 
 #[derive(Accounts)]
