@@ -75,6 +75,7 @@ export const PurchaseModal = ({ selectedNFT, setShowPurchaseModal, setSelectedNF
                 progress: undefined,
                 theme: "dark",
             });
+            window.location.reload();
         } catch (error) {
             setPurchaseStatus('error');
             console.error("Purchase error:", error);

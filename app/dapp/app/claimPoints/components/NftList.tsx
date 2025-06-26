@@ -45,7 +45,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
     const handleMint = async (nft: nfts) => {
         setMintingNftId(Number(nft.id)); 
         try {
-            // await ClaimPonits(wallet!, Number(nft.pointPrice))
+            await ClaimPonits(wallet!, Number(nft.pointPrice))
             await MintNft(wallet!, nft.id, nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
             const res = await axios.post('/api/nft/mintNft', {
                 id: nft.id,
@@ -53,6 +53,12 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
             });
             
             if (res.status === 200) {
+                setNfts(prevNfts => 
+                    prevNfts.map(item => 
+                        item.id === nft.id ? { ...item, Minted: true, Owner: wallet?.publicKey?.toBase58()! } : item
+                    )
+                );
+                setPoints(prevPoints => prevPoints - Number(nft.pointPrice));
                 toast.success(
                     `NFT Minted successfully!`,
                     {

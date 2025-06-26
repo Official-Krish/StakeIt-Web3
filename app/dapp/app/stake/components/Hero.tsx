@@ -87,7 +87,6 @@ export function Hero () {
         accruedrReward: accruedrReward
     }
     
-    const dailyEarnings = user.stakedSol * 864;
     const apy = "7";
     
     return (
@@ -134,14 +133,14 @@ export function Hero () {
                     },
                     {
                         label: 'Available Points',
-                        value: Math.floor(user.availablePoints).toLocaleString(),
+                        value: (user.availablePoints).toLocaleString(),
                         icon: Coins,
                         color: 'from-green-500 to-emerald-400',
                         bgColor: 'from-green-600/20 to-emerald-600/20',
                     },
                     {
                         label: 'Accumulated Rewards',
-                        value: `${Math.floor(user.accruedrReward).toLocaleString()} SOL`,
+                        value: `${(user.accruedrReward).toLocaleString()} SOL`,
                         icon: TrendingUp,
                         color: 'from-orange-500 to-yellow-400',
                         bgColor: 'from-orange-600/20 to-yellow-600/20',

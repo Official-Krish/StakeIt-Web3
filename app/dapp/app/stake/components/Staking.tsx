@@ -15,7 +15,6 @@ export default function Staking () {
     const [activeTab, setActiveTab] = useState<'stake' | 'unstake'>('stake');
     const [stakeAmount, setStakeAmount] = useState('');
     const [unstakeAmount, setUnstakeAmount] = useState('');
-    const [showClaimAnimation, setShowClaimAnimation] = useState(false);
     const [stakedAmount, setStakedAmount] = useState(0);
 
     useEffect(() => {
@@ -78,6 +77,7 @@ export default function Staking () {
                 }
             );
             setStakeAmount('');
+            window.location.reload();
         } else {
             toast.error(
                 `Failed to stake SOL: ${res.message}`,
@@ -113,6 +113,7 @@ export default function Staking () {
                 }
             );
             setUnstakeAmount('');
+            window.location.reload();
         }
         else {
             toast.error(
@@ -327,23 +328,6 @@ export default function Staking () {
                     )}
                 </AnimatePresence>
             </div>
-            <AnimatePresence>
-                {showClaimAnimation && (
-                    <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.5 }}
-                    className="fixed inset-0 flex items-center justify-center pointer-events-none z-50"
-                    >
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-400 text-white px-12 py-8 rounded-3xl shadow-2xl">
-                        <div className="flex items-center space-x-4">
-                        <Gift className="w-8 h-8" />
-                        <span className="text-2xl font-black">Points Claimed Successfully!</span>
-                        </div>
-                    </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </motion.div>
     )
 }

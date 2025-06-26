@@ -114,6 +114,11 @@ export default function MyNFTs() {
         Price: Number(sellPrice) * 1000000000,
       });
       if (res.status === 200){
+        setNfts(prevNfts => 
+          prevNfts.map(nft => 
+            nft.id === selectedNFT.id ? { ...nft, Listed: true, AskPrice: (Number(sellPrice) * 1000000000) as unknown as string } : nft
+          )
+        );
         toast.success('NFT listed successfully!', {
           position: "top-right",
           autoClose: 3000,
