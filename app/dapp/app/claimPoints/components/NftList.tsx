@@ -10,6 +10,7 @@ import { ClaimPonits } from "@/hooks/Staking";
 import { MintNft } from "@/hooks/Nft-Contract";
 import { toast } from "react-toastify";
 import { nfts } from "@/types/nft";
+import StakingPrediction from "./StakingPrediction";
 
 export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm: string, selectedCategory: string, viewMode: string } ) => {
     const wallet  = useAnchorWallet();
@@ -17,6 +18,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
     const [nfts, setNfts] = useState<nfts[]>([]);
     const [getNfts, setGetNfts] = useState<boolean>(false);
     const [mintingNftId, setMintingNftId] = useState<number | null>(null);
+    const [stakedAmount, setStakedAmount] = useState<number>(0);
 
     useEffect (() => {
         if (!wallet?.publicKey || getNfts) return;
@@ -24,10 +26,12 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
         setGetNfts(true);
     }, [wallet?.publicKey]);
 
+
     async function getData() {
         try {
             const data = await getPdaAccountData(wallet!);
-            setPoints((data.totalPoints) / 1000); 
+            setPoints(data.totalPoints); 
+            setStakedAmount(Number(data.stakedAmount) / 1e9);
             const res = await axios.get("/api/nft/getNfts");
             setNfts(res.data);
         } catch (error) {
@@ -170,6 +174,16 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                             </div>
                                         </div>
                                     </div>
+
+                                    {viewMode === "grid" && (
+                                        <div className="pb-4">
+                                            <StakingPrediction
+                                                userPoints={points}
+                                                nftCost={Number(nft.pointPrice)}
+                                                stakedAmount={stakedAmount}
+                                            />
+                                        </div>
+                                    )}
 
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
