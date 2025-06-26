@@ -72,6 +72,9 @@ export function Hero () {
             setTotalPoints(Number(data.totalPoints)); 
             setStakedAmount(Number(data.stakedAmount) / 1e9);
             setAccruedReward(Number(data.accruedReward) / 1e9);
+            console.log("Data fetched successfully:", {
+                data   
+            });
         } catch (error) {
             console.error("Data fetch error:", error);
         }

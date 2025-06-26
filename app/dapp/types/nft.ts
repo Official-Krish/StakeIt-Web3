@@ -41,3 +41,11 @@ export interface nfts {
     Minted: boolean;
     Listed: boolean;
 }
+
+export interface NFTTransactionHistory {
+    id: string;
+    nftId: string;
+    Buyer: string;
+    price: string;
+    PurchasedAt: Date;
+}

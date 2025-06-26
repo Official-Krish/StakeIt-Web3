@@ -45,7 +45,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
     const handleMint = async (nft: nfts) => {
         setMintingNftId(Number(nft.id)); 
         try {
-            await ClaimPonits(wallet!, Number(nft.pointPrice))
+            // await ClaimPonits(wallet!, Number(nft.pointPrice))
             await MintNft(wallet!, nft.id, nft.name, nft.basePrice, nft.uri, Number(nft.pointPrice), Number(nft.basePrice))
             const res = await axios.post('/api/nft/mintNft', {
                 id: nft.id,
@@ -168,7 +168,7 @@ export const NftList = ( { searchTerm, selectedCategory, viewMode}: { searchTerm
                                     <motion.button
                                         whileHover={{ scale: 1.05 }}
                                         whileTap={{ scale: 0.95 }}
-                                        disabled={!canAfford || nft.Minted || nft.Owner === wallet?.publicKey.toBase58() || isMinting}
+                                        // disabled={!canAfford || nft.Minted || nft.Owner === wallet?.publicKey.toBase58() || isMinting}
                                         className={`${viewMode === 'list' ? 'ml-6' : 'w-full'} py-4 px-6 rounded-2xl font-bold flex items-center justify-center space-x-2 transition-all ${
                                             canAfford && !nft.Minted && nft.Owner != wallet?.publicKey.toBase58() && !isMinting
                                             ? 'bg-gradient-to-r from-pink-600 to-violet-600 text-white hover:shadow-lg cursor-pointer'

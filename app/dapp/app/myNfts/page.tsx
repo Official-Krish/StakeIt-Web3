@@ -45,8 +45,8 @@ export default function MyNFTs() {
 
     useEffect(() => {
       const getPrice = async () => {
-          const res = await axios.get("https://api.jup.ag/price/v2?ids=So11111111111111111111111111111111111111112")
-          setUsdPrice(Number(res.data.data.So11111111111111111111111111111111111111112.price));
+        const res = await axios.get("https://lite-api.jup.ag/price/v3?ids=So11111111111111111111111111111111111111112")
+        setUsdPrice(Number(res.data.So11111111111111111111111111111111111111112.usdPrice));
       }
       getPrice();
   }, [])
@@ -107,7 +107,7 @@ export default function MyNFTs() {
         return;
       }     
       setSellStatus('processing');
-      ListNft(wallet!, Number(sellPrice) * 1000000000, selectedNFT.id)
+      await ListNft(wallet!, Number(sellPrice) * 1000000000, selectedNFT.id)
       const res = await axios.post('/api/nft/listNft', {
         Owner: wallet?.publicKey?.toBase58(),
         NftId: selectedNFT.id,

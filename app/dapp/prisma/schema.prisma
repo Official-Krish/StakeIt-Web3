@@ -26,6 +26,18 @@ model Nft {
   Likes       Int      @default(0)
   lastSalesPrice String? @default("You are the first buyer")
   createdAt   DateTime @default(now())
+  NftTransactionHistory NftTransactionHistory[]
+}
+
+model NftTransactionHistory {
+  id          String   @id @default(cuid())
+  nftId       String
+  Seller      String
+  Buyer       String
+  price       BigInt
+  PurchasedAt DateTime
+  
+  nft         Nft      @relation(fields: [nftId], references: [id])
 }
 
 model User {
