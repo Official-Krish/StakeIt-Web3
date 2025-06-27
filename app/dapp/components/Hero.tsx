@@ -124,11 +124,12 @@ export function Hero () {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 className="group flex items-center space-x-3 text-white font-semibold text-xl cursor-pointer"
+                                onClick={() => router.push('/help')}
                             >
                                 <div className="w-13 h-13 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors">
                                     <Play className="w-6 h-6 ml-1" />
                                 </div>
-                                <span>Watch Demo</span>
+                                <span>Learn How</span>
                             </motion.button>
                         </div>
                     </motion.div>
